@@ -51,30 +51,6 @@
     <ClInclude Include="..\inc\version.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\ext\hlsdk\const.h">
-      <Filter>inc\ext\hlsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\hlsdk\eiface.h">
-      <Filter>inc\ext\hlsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\hlsdk\extdll.h">
-      <Filter>inc\ext\hlsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\hlsdk\meta_api.h">
-      <Filter>inc\ext\hlsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\hlsdk\metamod.h">
-      <Filter>inc\ext\hlsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\hlsdk\model.h">
-      <Filter>inc\ext\hlsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\hlsdk\progdefs.h">
-      <Filter>inc\ext\hlsdk</Filter>
-    </ClInclude>
-    <ClInclude Include="..\ext\hlsdk\util.h">
-      <Filter>inc\ext\hlsdk</Filter>
-    </ClInclude>
     <ClInclude Include="..\inc\module.h">
       <Filter>inc</Filter>
     </ClInclude>

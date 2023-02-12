@@ -666,7 +666,7 @@ bool Bot::isPenetrableObstacle2 (const Vector &dest) {
    }
 
    const Vector &source = getEyesPos ();
-   const Vector &direction = (dest - source).normalize (); // 1 unit long
+   const Vector &direction = (dest - source).Normalize (); // 1 unit long
 
    int thikness = 0;
    int numHits = 0;
@@ -690,7 +690,7 @@ bool Bot::isPenetrableObstacle2 (const Vector &dest) {
    }
 
    if (numHits < 3 && thikness < 98) {
-      if (dest.distanceSq (point) < 13143.0f) {
+      if (dest.DistanceSquared (point) < 13143.0f) {
          return true;
       }
    }
@@ -708,7 +708,7 @@ bool Bot::needToPauseFiring (float distance) {
       return true;
    }
 
-   if ((m_aimFlags & AimFlags::Enemy) && !m_enemyOrigin.empty ()) {
+   if ((m_aimFlags & AimFlags::Enemy) && !m_enemyOrigin.IsZero ()) {
       if (util.getShootingCone (ent (), m_enemyOrigin) > 0.92f && isEnemyBehindShield (m_enemy)) {
          return true;
       }
@@ -824,7 +824,7 @@ void Bot::selectWeapons (float distance, int index, int id, int choosen) {
    }
 
    // we're should stand still before firing sniper weapons, else sniping is useless..
-   if (usesSniper () && (m_aimFlags & (AimFlags::Enemy | AimFlags::LastEnemy)) && !m_isReloading && pev->velocity.lengthSq () > 0.0f && getCurrentTaskId () != Task::SeekCover) {
+   if (usesSniper () && (m_aimFlags & (AimFlags::Enemy | AimFlags::LastEnemy)) && !m_isReloading && pev->velocity.LengthSquared () > 0.0f && getCurrentTaskId () != Task::SeekCover) {
       m_moveSpeed = 0.0f;
       m_strafeSpeed = 0.0f;
       m_navTimeset = game.time ();

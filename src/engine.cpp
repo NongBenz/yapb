@@ -1115,7 +1115,7 @@ void LightMeasure::animateLight () {
    }
 }
 
-void LightMeasure::updateLight (int style, char *value) {
+void LightMeasure::updateLight (int style, const char *value) {
    if (!m_doAnimation) {
       return;
    }

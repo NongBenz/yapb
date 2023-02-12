@@ -36,14 +36,6 @@
     <ClInclude Include="..\ext\crlib\crlib\ulz.h" />
     <ClInclude Include="..\ext\crlib\crlib\uniqueptr.h" />
     <ClInclude Include="..\ext\crlib\crlib\vector.h" />
-    <ClInclude Include="..\ext\hlsdk\const.h" />
-    <ClInclude Include="..\ext\hlsdk\eiface.h" />
-    <ClInclude Include="..\ext\hlsdk\extdll.h" />
-    <ClInclude Include="..\ext\hlsdk\metamod.h" />
-    <ClInclude Include="..\ext\hlsdk\meta_api.h" />
-    <ClInclude Include="..\ext\hlsdk\model.h" />
-    <ClInclude Include="..\ext\hlsdk\progdefs.h" />
-    <ClInclude Include="..\ext\hlsdk\util.h" />
     <ClInclude Include="..\inc\config.h" />
     <ClInclude Include="..\inc\control.h" />
     <ClInclude Include="..\inc\engine.h" />
@@ -149,7 +141,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\vc;..\inc;..\ext;..\ext\crlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vc;..\inc;..\ext;..\ext\crlib;..\..\halflife-updated\dlls;..\..\halflife-updated\engine;..\..\halflife-updated\common;..\..\halflife-updated\pm_shared;..\..\halflife-updated\public;..\..\metamod-p\metamod;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;CR_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader />
@@ -170,7 +162,7 @@
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <ResourceCompile>
@@ -222,7 +214,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>..\vc;..\inc;..\ext;..\ext\crlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vc;..\inc;..\ext;..\ext\crlib;..\..\halflife-updated\dlls;..\..\halflife-updated\engine;..\..\halflife-updated\common;..\..\halflife-updated\pm_shared;..\..\halflife-updated\public;..\..\metamod-p\metamod;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>false</ExceptionHandling>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -251,7 +243,7 @@
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <LanguageStandard>Default</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>

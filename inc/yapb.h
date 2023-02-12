@@ -7,9 +7,16 @@
 
 #pragma once
 
-#include <hlsdk/extdll.h>
-#include <hlsdk/metamod.h>
+
+#include <PlatformHeaders.h>
+
+
+#include <extdll.h>
+#include <metamod.h>
 #include <hlsdk/physint.h>
+
+#include <pm_defs.h>
+#include <usercmd.h>
 
 #include <crlib/crlib.h>
 
@@ -23,6 +30,12 @@ using namespace cr;
 class Bot;
 class BotGraph;
 class BotManager;
+
+enum HLBool : int32 {
+  HLFalse, HLTrue
+};
+
+
 
 // defines bots tasks
 CR_DECLARE_SCOPED_ENUM (Task,

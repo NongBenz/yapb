@@ -9,8 +9,8 @@
 
 ConVar cv_version ("yb_version", product.version.chars (), Var::ReadOnly);
 
-gamefuncs_t dllapi;
-newgamefuncs_t newapi;
+DLL_FUNCTIONS dllapi;
+NEW_DLL_FUNCTIONS newapi;
 enginefuncs_t engfuncs;
 gamedll_funcs_t dllfuncs;
 
@@ -82,7 +82,7 @@ namespace variadic {
    }
 }
 
-CR_EXPORT int GetEntityAPI (gamefuncs_t *table, int) {
+CR_EXPORT int GetEntityAPI (DLL_FUNCTIONS *table, int) {
    // this function is called right after GiveFnptrsToDll() by the engine in the game DLL (or
    // what it BELIEVES to be the game DLL), in order to copy the list of MOD functions that can
    // be called by the engine, into a memory block pointed to by the functionTable pointer
@@ -93,7 +93,7 @@ CR_EXPORT int GetEntityAPI (gamefuncs_t *table, int) {
    // engine, and then calls the MOD DLL's version of GetEntityAPI to get the REAL gamedll
    // functions this time (to use in the bot code).
 
-   plat.bzero (table, sizeof (gamefuncs_t));
+   plat.bzero (table, sizeof (DLL_FUNCTIONS));
 
    if (!(game.is (GameFlags::Metamod))) {
       auto api_GetEntityAPI = game.lib ().resolve <decltype (&GetEntityAPI)> (__FUNCTION__);
@@ -105,7 +105,7 @@ CR_EXPORT int GetEntityAPI (gamefuncs_t *table, int) {
       dllfuncs.dllapi_table = &dllapi;
       gpGamedllFuncs = &dllfuncs;
 
-      memcpy (table, &dllapi, sizeof (gamefuncs_t));
+      memcpy (table, &dllapi, sizeof (DLL_FUNCTIONS));
    }
 
    table->pfnGameInit = [] () {
@@ -412,13 +412,14 @@ CR_EXPORT int GetEntityAPI (gamefuncs_t *table, int) {
       bots.frame ();
    };
 
-   table->pfnCmdStart = [] (const edict_t *player, usercmd_t *cmd, unsigned int random_seed) {
+   table->pfnCmdStart = [] (const edict_t *player, const usercmd_t *cmd, unsigned int random_seed) {
       auto ent = const_cast <edict_t *> (player);
       
       // if we're handle pings for bots and clients, clear IN_SCORE button so SV_ShouldUpdatePing engine function return false, and SV_EmitPings will not overwrite our results
       if (game.is (GameFlags::HasFakePings) && cv_show_latency.int_ () == 2) {
          if (!util.isFakeClient (ent) && (ent->v.oldbuttons | ent->v.button | cmd->buttons) & IN_SCORE) {
-            cmd->buttons &= ~IN_SCORE;
+            // TODO: Can't clear score flag because usercmd is const in updated sdk :/
+            //cmd->buttons &= ~IN_SCORE;
             util.emitPings (ent);
          }
       }
@@ -445,7 +446,7 @@ CR_EXPORT int GetEntityAPI (gamefuncs_t *table, int) {
    return HLTrue;
 }
 
-CR_LINKAGE_C int GetEntityAPI_Post (gamefuncs_t *table, int) {
+CR_LINKAGE_C int GetEntityAPI_Post (DLL_FUNCTIONS *table, int) {
    // this function is called right after GiveFnptrsToDll() by the engine in the game DLL (or
    // what it BELIEVES to be the game DLL), in order to copy the list of MOD functions that can
    // be called by the engine, into a memory block pointed to by the functionTable pointer
@@ -456,7 +457,7 @@ CR_LINKAGE_C int GetEntityAPI_Post (gamefuncs_t *table, int) {
    // engine, and then calls the MOD DLL's version of GetEntityAPI to get the REAL gamedll
    // functions this time (to use in the bot code). Post version, called only by metamod.
 
-   plat.bzero (table, sizeof (gamefuncs_t));
+   plat.bzero (table, sizeof (DLL_FUNCTIONS));
 
    table->pfnSpawn = [] (edict_t *ent) {
       // this function asks the game DLL to spawn (i.e, give a physical existence in the virtual
@@ -519,7 +520,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       };
    }
 
-   table->pfnLightStyle = [] (int style, char *val) {
+   table->pfnLightStyle = [] (int style, const char *val) {
       // ths function update lightstyle for the bots
 
       illum.updateLight (style, val);
@@ -784,14 +785,14 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
    return HLTrue;
 }
 
-CR_EXPORT int GetNewDLLFunctions (newgamefuncs_t *table, int *interfaceVersion) {
+CR_EXPORT int GetNewDLLFunctions (NEW_DLL_FUNCTIONS *table, int *interfaceVersion) {
    // it appears that an extra function table has been added in the engine to gamedll interface
    // since the date where the first enginefuncs table standard was frozen. These ones are
    // facultative and we don't hook them, but since some MODs might be featuring it, we have to
    // pass them too, else the DLL interfacing wouldn't be complete and the game possibly wouldn't
    // run properly.
 
-   plat.bzero (table, sizeof (newgamefuncs_t));
+   plat.bzero (table, sizeof (NEW_DLL_FUNCTIONS));
 
    if (!(game.is (GameFlags::Metamod))) {
       auto api_GetNewDLLFunctions = game.lib ().resolve <decltype (&GetNewDLLFunctions)> (__FUNCTION__);
@@ -801,7 +802,7 @@ CR_EXPORT int GetNewDLLFunctions (newgamefuncs_t *table, int *interfaceVersion) 
          logger.error ("Could not resolve symbol \"%s\" in the game dll.", __FUNCTION__);
       }
       dllfuncs.newapi_table = &newapi;
-      memcpy (table, &newapi, sizeof (newgamefuncs_t));
+      memcpy (table, &newapi, sizeof (NEW_DLL_FUNCTIONS));
    }
 
    if (!game.is (GameFlags::Legacy)) {
@@ -862,13 +863,13 @@ CR_EXPORT int Meta_Query (char *, plugin_info_t **pPlugInfo, mutil_funcs_t *pMet
    return HLTrue; // tell metamod this plugin looks safe
 }
 
-CR_EXPORT int Meta_Attach (PLUG_LOADTIME now, metamod_funcs_t *functionTable, meta_globals_t *pMGlobals, gamedll_funcs_t *pGamedllFuncs) {
+CR_EXPORT int Meta_Attach (PLUG_LOADTIME now, META_FUNCTIONS *functionTable, meta_globals_t *pMGlobals, gamedll_funcs_t *pGamedllFuncs) {
    // this function is called when metamod attempts to load the plugin. Since it's the place
    // where we can tell if the plugin will be allowed to run or not, we wait until here to make
    // our initialization stuff, like registering CVARs and dedicated server commands.
 
    // metamod engine & dllapi function tables
-   static metamod_funcs_t metamodFunctionTable = {
+   static META_FUNCTIONS metamodFunctionTable = {
       GetEntityAPI, // pfnGetEntityAPI ()
       GetEntityAPI_Post, // pfnGetEntityAPI_Post ()
       nullptr, // pfnGetEntityAPI2 ()
@@ -886,7 +887,7 @@ CR_EXPORT int Meta_Attach (PLUG_LOADTIME now, metamod_funcs_t *functionTable, me
 
    // keep track of the pointers to engine function tables metamod gives us
    gpMetaGlobals = pMGlobals;
-   memcpy (functionTable, &metamodFunctionTable, sizeof (metamod_funcs_t));
+   memcpy (functionTable, &metamodFunctionTable, sizeof (META_FUNCTIONS));
    gpGamedllFuncs = pGamedllFuncs;
 
    return HLTrue; // returning true enables metamod to attach this plugin

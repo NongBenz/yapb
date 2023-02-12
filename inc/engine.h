@@ -7,6 +7,10 @@
 
 #pragma once
 
+#include <com_model.h>
+#define MAX_LIGHTSTYLES 64
+#define MAX_LIGHTSTYLEVALUE 256
+
 // line draw
 CR_DECLARE_SCOPED_ENUM (DrawLine,
    Simple,
@@ -514,6 +518,11 @@ public:
    }
 };
 
+struct lightstyle_t {
+   int length;
+   char map[MAX_LIGHTSTYLES];
+};
+
 class LightMeasure final : public Singleton <LightMeasure> {
 private:
    lightstyle_t m_lightstyle[MAX_LIGHTSTYLES] {};
@@ -532,7 +541,7 @@ public:
 public:
    void initializeLightstyles ();
    void animateLight ();
-   void updateLight (int style, char *value);
+   void updateLight (int style, const char *value);
 
    float getLightLevel (const Vector &point);
    float getSkyColor ();
