@@ -48,7 +48,7 @@ void Game::precache () {
    m_mapFlags = 0; // reset map type as worldspawn is the first entity spawned
 
    // detect official csbots here
-   if (!(is (GameFlags::Legacy)) && engfuncs.pfnCVarGetPointer ("bot_stop") != nullptr) {
+   if (!(is (GameFlags::Legacy)) && g_engfuncs.pfnCVarGetPointer ("bot_stop") != nullptr) {
       m_gameFlags |= GameFlags::CSBot;
    }
    registerCvars (true);
@@ -105,10 +105,10 @@ void Game::levelInitialize (edict_t *entities, int max) {
       }
       else if (strcmp (classname, "player_weaponstrip") == 0) {
          if (is (GameFlags::Legacy) && strings.isEmpty (STRING(ent->v.target))) {
-            ent->v.target = ent->v.targetname = engfuncs.pfnAllocString ("fake");
+            ent->v.target = ent->v.targetname = g_engfuncs.pfnAllocString ("fake");
          }
          else if (!is (GameFlags::ReGameDLL)) {
-            engfuncs.pfnRemoveEntity (ent);
+            g_engfuncs.pfnRemoveEntity (ent);
          }
       }
       else if (strcmp (classname, "info_player_start") == 0 || strcmp (classname, "info_vip_start") == 0) {
@@ -214,7 +214,7 @@ void Game::testLine (const Vector &start, const Vector &end, int ignoreFlags, ed
    if (ignoreFlags & TraceIgnore::Glass) {
       engineFlags |= 0x100;
    }
-   engfuncs.pfnTraceLine (start, end, engineFlags, ignoreEntity, ptr);
+   g_engfuncs.pfnTraceLine (start, end, engineFlags, ignoreEntity, ptr);
 }
 
 bool Game::testLineChannel (TraceChannel channel, const Vector &start, const Vector &end, int ignoreFlags, edict_t *ignoreEntity, TraceResult &result) {
@@ -258,7 +258,7 @@ void Game::testHull (const Vector &start, const Vector &end, int ignoreFlags, in
    // function allows to specify whether the trace starts "inside" an entity's polygonal model,
    // and if so, to specify that entity in ignoreEntity in order to ignore it as an obstacle.
 
-   engfuncs.pfnTraceHull (start, end, !!(ignoreFlags & TraceIgnore::Monsters), hullNumber, ignoreEntity, ptr);
+   g_engfuncs.pfnTraceHull (start, end, !!(ignoreFlags & TraceIgnore::Monsters), hullNumber, ignoreEntity, ptr);
 }
 
 // helper class for reading wave header
@@ -342,7 +342,7 @@ float Game::getWaveLen (const char *fileName) {
 
 bool Game::isDedicated () {
    // return true if server is dedicated server, false otherwise
-   static bool dedicated = engfuncs.pfnIsDedicatedServer () > 0;
+   static bool dedicated = g_engfuncs.pfnIsDedicatedServer () > 0;
 
    return dedicated;
 }
@@ -357,7 +357,7 @@ const char *Game::getRunningModName () {
    }
 
    char engineModName[256];
-   engfuncs.pfnGetGameDir (engineModName);
+   g_engfuncs.pfnGetGameDir (engineModName);
 
    name = engineModName;
    size_t slash = name.findLastOf ("\\/");
@@ -396,17 +396,17 @@ void Game::registerEngineCommand (const char *command, void func ()) {
    // pointed to by "function" in order to handle it.
 
    // check for hl pre 1.1.0.4, as it's doesn't have pfnAddServerCommand
-   if (!plat.checkPointer (engfuncs.pfnAddServerCommand)) {
+   if (!plat.checkPointer (g_engfuncs.pfnAddServerCommand)) {
       logger.fatal ("%s's minimum HL engine version is 1.1.0.4 and minimum Counter-Strike is Beta 6.5. Please update your engine / game version.", product.name);
    }
-   engfuncs.pfnAddServerCommand (const_cast <char *> (command), func);
+   g_engfuncs.pfnAddServerCommand (const_cast <char *> (command), func);
 }
 
 void Game::playSound (edict_t *ent, const char *sound) {
    if (isNullEntity (ent)) {
       return;
    }
-   engfuncs.pfnEmitSound (ent, CHAN_WEAPON, sound, 1.0f, ATTN_NORM, 0, 100);
+   g_engfuncs.pfnEmitSound (ent, CHAN_WEAPON, sound, 1.0f, ATTN_NORM, 0, 100);
 }
 
 void Game::setPlayerStartDrawModels () {
@@ -450,7 +450,7 @@ bool Game::checkVisibility (edict_t *ent, uint8 *set) {
          return true;
       }
    }
-   return engfuncs.pfnCheckVisibility (ent, set) > 0;
+   return g_engfuncs.pfnCheckVisibility (ent, set) > 0;
 }
 
 uint8 *Game::getVisibilitySet (Bot *bot, bool pvs) {
@@ -464,7 +464,7 @@ uint8 *Game::getVisibilitySet (Bot *bot, bool pvs) {
    }
    float org[3] { eyes.x, eyes.y, eyes.z };
 
-   return pvs ? engfuncs.pfnSetFatPVS (org) : engfuncs.pfnSetFatPAS (org);
+   return pvs ? g_engfuncs.pfnSetFatPVS (org) : g_engfuncs.pfnSetFatPAS (org);
 }
 
 void Game::sendClientMessage (bool console, edict_t *ent, StringRef message) {
@@ -511,11 +511,11 @@ void Game::sendServerMessage (StringRef message) {
 
       // send in chunks
       for (size_t i = 0; i < chunks.length (); ++i) {
-         engfuncs.pfnServerPrint (chunks[i].chars ());
+         g_engfuncs.pfnServerPrint (chunks[i].chars ());
       }
       return;
    }
-   engfuncs.pfnServerPrint (message.chars ());
+   g_engfuncs.pfnServerPrint (message.chars ());
 }
 
 void Game::prepareBotArgs (edict_t *ent, String str) {
@@ -680,11 +680,11 @@ void Game::checkCvarsBounds () {
    // special case for xash3d, by default engine is not calling startframe if no players on server, but our quota management and bot adding
    // mechanism assumes that starframe is called even if no players on server, so, set the xash3d's sv_forcesimulating cvar to 1 in case it's not
    if (is (GameFlags::Xash3D)) {
-      static cvar_t *sv_forcesimulating = engfuncs.pfnCVarGetPointer ("sv_forcesimulating");
+      static cvar_t *sv_forcesimulating = g_engfuncs.pfnCVarGetPointer ("sv_forcesimulating");
 
       if (sv_forcesimulating && sv_forcesimulating->value != 1.0f) {
          game.print ("Force-enable Xash3D sv_forcesimulating cvar.");
-         engfuncs.pfnCVarSetFloat ("sv_forcesimulating", 1.0f);
+         g_engfuncs.pfnCVarSetFloat ("sv_forcesimulating", 1.0f);
       }
    }
 }
@@ -697,7 +697,7 @@ void Game::registerCvars (bool gameVars) {
       cvar_t &reg = var.reg;
 
       if (var.type != Var::GameRef) {
-         self.ptr = engfuncs.pfnCVarGetPointer (reg.name);
+         self.ptr = g_engfuncs.pfnCVarGetPointer (reg.name);
 
          if (!self.ptr) {
             static cvar_t reg_;
@@ -705,24 +705,24 @@ void Game::registerCvars (bool gameVars) {
             // fix metamod' memlocs not found
             if (is (GameFlags::Metamod)) {
                reg_ = var.reg;
-               engfuncs.pfnCVarRegister (&reg_);
+               g_engfuncs.pfnCVarRegister (&reg_);
             }
             else {
-               engfuncs.pfnCVarRegister (&var.reg);
+               g_engfuncs.pfnCVarRegister (&var.reg);
             }
-            self.ptr = engfuncs.pfnCVarGetPointer (reg.name);
+            self.ptr = g_engfuncs.pfnCVarGetPointer (reg.name);
          }
       }
       else if (gameVars) {
-         self.ptr = engfuncs.pfnCVarGetPointer (reg.name);
+         self.ptr = g_engfuncs.pfnCVarGetPointer (reg.name);
 
          if (var.missing && !self.ptr) {
             if (reg.string == nullptr && !var.regval.empty ()) {
                reg.string = const_cast <char *> (var.regval.chars ());
                reg.flags |= FCVAR_SERVER;
             }
-            engfuncs.pfnCVarRegister (&var.reg);
-            self.ptr = engfuncs.pfnCVarGetPointer (reg.name);
+            g_engfuncs.pfnCVarRegister (&var.reg);
+            self.ptr = g_engfuncs.pfnCVarGetPointer (reg.name);
          }
 
          if (!self.ptr) {
@@ -799,7 +799,7 @@ bool Game::loadCSBinary () {
          auto entity = m_gameLib.resolve <EntityFunction> ("weapon_famas");
 
          // detect xash engine
-         if (engfuncs.pfnCVarGetPointer ("build") != nullptr) {
+         if (g_engfuncs.pfnCVarGetPointer ("build") != nullptr) {
             m_gameFlags |= (GameFlags::Legacy | GameFlags::Xash3D);
 
             if (entity != nullptr) {
@@ -927,8 +927,8 @@ void Game::applyGameModes () {
       return;
    }
 
-   static auto dmActive = engfuncs.pfnCVarGetPointer ("csdm_active");
-   static auto freeForAll = engfuncs.pfnCVarGetPointer ("mp_freeforall");
+   static auto dmActive = g_engfuncs.pfnCVarGetPointer ("csdm_active");
+   static auto freeForAll = g_engfuncs.pfnCVarGetPointer ("mp_freeforall");
 
    // csdm is only with amxx and metamod
    if (dmActive) {
@@ -1003,7 +1003,7 @@ void Game::slowFrame () {
 void Game::searchEntities (StringRef field, StringRef value, EntitySearch functor) {
    edict_t *ent = nullptr;
 
-   while (!game.isNullEntity (ent = engfuncs.pfnFindEntityByString (ent, field.chars (), value.chars ()))) {
+   while (!game.isNullEntity (ent = g_engfuncs.pfnFindEntityByString (ent, field.chars (), value.chars ()))) {
       if ((ent->v.flags & EF_NODRAW) || (ent->v.flags & FL_CLIENT)) {
          continue;
       }
@@ -1018,7 +1018,7 @@ void Game::searchEntities (const Vector &position, float radius, EntitySearch fu
    edict_t *ent = nullptr;
    const Vector &pos = position.empty () ? m_startEntity->v.origin : position;
 
-   while (!game.isNullEntity (ent = engfuncs.pfnFindEntityInSphere (ent, pos, radius))) {
+   while (!game.isNullEntity (ent = g_engfuncs.pfnFindEntityInSphere (ent, pos, radius))) {
       if ((ent->v.flags & EF_NODRAW) || (ent->v.flags & FL_CLIENT)) {
          continue;
       }

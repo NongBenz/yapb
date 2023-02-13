@@ -127,10 +127,10 @@ void BotSupport::traceDecals (entvars_t *pev, TraceResult *trace, int logotypeIn
    auto logo = conf.getRandomLogoName (logotypeIndex);
 
    int entityIndex = -1, message = TE_DECAL;
-   int decalIndex = engfuncs.pfnDecalIndex (logo.chars ());
+   int decalIndex = g_engfuncs.pfnDecalIndex (logo.chars ());
 
    if (decalIndex < 0) {
-      decalIndex = engfuncs.pfnDecalIndex ("{lambda06");
+      decalIndex = g_engfuncs.pfnDecalIndex ("{lambda06");
    }
 
    if (fequal (trace->flFraction, 1.0f)) {
@@ -233,7 +233,7 @@ bool BotSupport::isPlayerVIP (edict_t *ent) {
    if (!isPlayer (ent)) {
       return false;
    }
-   return *(engfuncs.pfnInfoKeyValue (engfuncs.pfnGetInfoKeyBuffer (ent), "model")) == 'v';
+   return *(g_engfuncs.pfnInfoKeyValue (g_engfuncs.pfnGetInfoKeyBuffer (ent), "model")) == 'v';
 }
 
 bool BotSupport::isFakeClient (edict_t *ent) {
@@ -583,7 +583,7 @@ void BotSupport::calculatePings () {
          continue;
       }
       int ping, loss;
-      engfuncs.pfnGetPlayerStats (client.ent, &ping, &loss);
+      g_engfuncs.pfnGetPlayerStats (client.ent, &ping, &loss);
 
       // store normal client ping
       client.ping = getPingBitmask (client.ent, loss, ping > 0 ? ping : rg.get (8, 16)); // getting player ping sometimes fails

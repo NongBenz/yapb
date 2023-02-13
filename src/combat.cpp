@@ -682,7 +682,7 @@ bool Bot::isPenetrableObstacle2 (const Vector &dest) {
 
       point = tr.vecEndPos + direction;
 
-      while (engfuncs.pfnPointContents (point) == CONTENTS_SOLID && thikness < 98) {
+      while (g_engfuncs.pfnPointContents (point) == CONTENTS_SOLID && thikness < 98) {
          point = point + direction;
          thikness++;
       }

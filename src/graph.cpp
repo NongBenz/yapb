@@ -1993,7 +1993,7 @@ bool BotGraph::isNodeReacheable (const Vector &src, const Vector &destination) {
       }
 
       // check for special case of both nodes being in water...
-      if (engfuncs.pfnPointContents (src) == CONTENTS_WATER && engfuncs.pfnPointContents (destination) == CONTENTS_WATER) {
+      if (g_engfuncs.pfnPointContents (src) == CONTENTS_WATER && g_engfuncs.pfnPointContents (destination) == CONTENTS_WATER) {
          return true; // then they're reachable each other
       }
 
@@ -2549,7 +2549,7 @@ bool BotGraph::checkNodes (bool teleportPlayer) {
 
    auto teleport = [&] (const Path &path) -> void {
       if (teleportPlayer) {
-         engfuncs.pfnSetOrigin (m_editor, path.origin);
+         g_engfuncs.pfnSetOrigin (m_editor, path.origin);
          setEditFlag (GraphEdit::On | GraphEdit::Noclip);
       }
    };
@@ -2780,7 +2780,7 @@ void BotGraph::addBasic () {
 
       game.testHull (down, up, TraceIgnore::Monsters, point_hull, nullptr, &tr);
 
-      if (engfuncs.pfnPointContents (up) == CONTENTS_SOLID || !fequal (tr.flFraction, 1.0f)) {
+      if (g_engfuncs.pfnPointContents (up) == CONTENTS_SOLID || !fequal (tr.flFraction, 1.0f)) {
          up = down = back;
          down.z = ent->v.absmax.z;
       }

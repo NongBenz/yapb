@@ -67,7 +67,7 @@ void BotConfig::loadMainConfig (bool isFirstLoad) {
             auto ignore = String (cv_ignore_cvars_on_changelevel.str ()).split (",");
 
             auto key = keyval[0].trim ().chars ();
-            auto cvar = engfuncs.pfnCVarGetPointer (key);
+            auto cvar = g_engfuncs.pfnCVarGetPointer (key);
 
             if (cvar != nullptr) {
                auto value = const_cast <char *> (keyval[1].trim ().trim ("\"").trim ().chars ());
@@ -76,16 +76,16 @@ void BotConfig::loadMainConfig (bool isFirstLoad) {
 
                   // preserve quota number if it's zero
                   if (strings.matches (cvar->name, "yb_quota") && cv_quota.int_ () <= 0) {
-                     engfuncs.pfnCvar_DirectSet (cvar, value);
+                     g_engfuncs.pfnCvar_DirectSet (cvar, value);
                      continue;
                   }
                   ctrl.msg ("Bot CVAR '%s' differs from the stored in the config (%s/%s). Ignoring.", cvar->name, cvar->string, value);
 
                   // ensure cvar will have old value
-                  engfuncs.pfnCvar_DirectSet (cvar, cvar->string);
+                  g_engfuncs.pfnCvar_DirectSet (cvar, cvar->string);
                }
                else {
-                  engfuncs.pfnCvar_DirectSet (cvar, value);
+                  g_engfuncs.pfnCvar_DirectSet (cvar, value);
                }
             }
             else {
@@ -673,11 +673,11 @@ void BotConfig::setupMemoryFiles () {
    static bool setMemoryPointers = true;
 
    auto wrapLoadFile = [] (const char *filename, int *length) {
-      return engfuncs.pfnLoadFileForMe (filename, length);
+      return g_engfuncs.pfnLoadFileForMe (filename, length);
    };
 
    auto wrapFreeFile = [] (void *buffer) {
-      engfuncs.pfnFreeFile (buffer);
+      g_engfuncs.pfnFreeFile (buffer);
    };
 
    if (setMemoryPointers) {

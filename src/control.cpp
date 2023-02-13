@@ -656,7 +656,7 @@ int BotControl::cmdNodeTeleport () {
 
    // check for existence
    if (graph.exists (index)) {
-      engfuncs.pfnSetOrigin (graph.getEditor (), graph[index].origin);
+      g_engfuncs.pfnSetOrigin (graph.getEditor (), graph[index].origin);
 
       msg ("You have been teleported to node %d.", index);
 
@@ -831,7 +831,7 @@ int BotControl::cmdNodeIterateCamp () {
          if (graph[m_campIterator.first ()].flags & NodeFlag::Crouch) {
             origin.z += 23.0f;
          }
-         engfuncs.pfnSetOrigin (m_ent, origin);
+         g_engfuncs.pfnSetOrigin (m_ent, origin);
 
          // go to next
          m_campIterator.shift ();
@@ -1879,7 +1879,7 @@ void BotControl::showMenu (int id) {
          }
 
          client.menu = id;
-         engfuncs.pfnClientCommand (m_ent, "speak \"player/geiger1\"\n"); // stops others from hearing menu sounds..
+         g_engfuncs.pfnClientCommand (m_ent, "speak \"player/geiger1\"\n"); // stops others from hearing menu sounds..
 
          break;
       }
@@ -1962,7 +1962,7 @@ void BotControl::assignAdminRights (edict_t *ent, char *infobuffer) {
    if (!key.empty () && !password.empty ()) {
       auto &client = util.getClient (game.indexOfPlayer (ent));
 
-      if (password == engfuncs.pfnInfoKeyValue (infobuffer, key.chars ())) {
+      if (password == g_engfuncs.pfnInfoKeyValue (infobuffer, key.chars ())) {
          client.flags |= ClientFlags::Admin;
       }
       else {
@@ -1989,13 +1989,13 @@ void BotControl::maintainAdminRights () {
          if (key.empty () || password.empty ()) {
             client.flags &= ~ClientFlags::Admin;
          }
-         else if (password != engfuncs.pfnInfoKeyValue (engfuncs.pfnGetInfoKeyBuffer (ent), key.chars ())) {
+         else if (password != g_engfuncs.pfnInfoKeyValue (g_engfuncs.pfnGetInfoKeyBuffer (ent), key.chars ())) {
             client.flags &= ~ClientFlags::Admin;
             ctrl.msg ("Player %s had lost remote access to %s.", STRING(ent->v.netname), product.name);
          }
       }
       else if (!(client.flags & ClientFlags::Admin) && !key.empty () && !password.empty ()) {
-         if (password == engfuncs.pfnInfoKeyValue (engfuncs.pfnGetInfoKeyBuffer (ent), key.chars ())) {
+         if (password == g_engfuncs.pfnInfoKeyValue (g_engfuncs.pfnGetInfoKeyBuffer (ent), key.chars ())) {
             client.flags |= ClientFlags::Admin;
             ctrl.msg ("Player %s had gained full remote access to %s.", STRING(ent->v.netname), product.name);
          }

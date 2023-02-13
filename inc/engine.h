@@ -94,20 +94,20 @@ public:
 
 private:
    const char *allocStr (const char *str) const {
-      return STRING (engfuncs.pfnAllocString (str));
+      return STRING (g_engfuncs.pfnAllocString (str));
    }
 
 public:
    int32 precacheModel (const char *model) const {
-      return engfuncs.pfnPrecacheModel (allocStr (model));
+      return g_engfuncs.pfnPrecacheModel (allocStr (model));
    }
 
    int32 precacheSound (const char *sound) const {
-      return engfuncs.pfnPrecacheSound (allocStr (sound));
+      return g_engfuncs.pfnPrecacheSound (allocStr (sound));
    }
 
    void setModel (edict_t *ent, const char *model) {
-      engfuncs.pfnSetModel (ent, allocStr (model));
+      g_engfuncs.pfnSetModel (ent, allocStr (model));
    }
 };
 
@@ -361,7 +361,7 @@ public:
 
    // find variable value by variable name
    StringRef findCvar (StringRef name) {
-      return engfuncs.pfnCVarGetString (name.chars ());
+      return g_engfuncs.pfnCVarGetString (name.chars ());
    }
 
    // helper to sending the client message
@@ -372,7 +372,7 @@ public:
 
    // send server command
    template <typename ...Args> void serverCommand (const char *fmt, Args &&...args) {
-      engfuncs.pfnServerCommand (strings.concat (strings.format (fmt, cr::forward <Args> (args)...), "\n", StringBuffer::StaticBufferSize));
+      g_engfuncs.pfnServerCommand (strings.concat (strings.format (fmt, cr::forward <Args> (args)...), "\n", StringBuffer::StaticBufferSize));
    }
 
    // send a bot command
@@ -439,7 +439,7 @@ public:
    }
 
    void set (float val) {
-      engfuncs.pfnCVarSetFloat (ptr->name, val);
+      g_engfuncs.pfnCVarSetFloat (ptr->name, val);
    }
 
    void set (int val) {
@@ -447,7 +447,7 @@ public:
    }
 
    void set (const char *val) {
-      engfuncs.pfnCvar_DirectSet (ptr, val);
+      g_engfuncs.pfnCvar_DirectSet (ptr, val);
    }
 };
 
@@ -471,41 +471,41 @@ public:
 
 public:
    MessageWriter &start (int dest, int type, const Vector &pos = nullptr, edict_t *to = nullptr) {
-      engfuncs.pfnMessageBegin (dest, type, pos, to);
+      g_engfuncs.pfnMessageBegin (dest, type, pos, to);
       return *this;
    }
 
    void end () {
-      engfuncs.pfnMessageEnd ();
+      g_engfuncs.pfnMessageEnd ();
    }
 
    MessageWriter &writeByte (int val) {
-      engfuncs.pfnWriteByte (val);
+      g_engfuncs.pfnWriteByte (val);
       return *this;
    }
 
    MessageWriter &writeLong (int val) {
-      engfuncs.pfnWriteLong (val);
+      g_engfuncs.pfnWriteLong (val);
       return *this;
    }
 
    MessageWriter &writeChar (int val) {
-      engfuncs.pfnWriteChar (val);
+      g_engfuncs.pfnWriteChar (val);
       return *this;
    }
 
    MessageWriter &writeShort (int val) {
-      engfuncs.pfnWriteShort (val);
+      g_engfuncs.pfnWriteShort (val);
       return *this;
    }
 
    MessageWriter &writeCoord (float val) {
-      engfuncs.pfnWriteCoord (val);
+      g_engfuncs.pfnWriteCoord (val);
       return *this;
    }
 
    MessageWriter &writeString (const char *val) {
-      engfuncs.pfnWriteString (val);
+      g_engfuncs.pfnWriteString (val);
       return *this;
    }
 

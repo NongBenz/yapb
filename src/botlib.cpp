@@ -2928,7 +2928,7 @@ void Bot::checkDarkness () {
 }
 
 void Bot::checkParachute () {
-   static auto parachute = engfuncs.pfnCVarGetPointer (conf.fetchCustom ("AMXParachuteCvar").chars ());
+   static auto parachute = g_engfuncs.pfnCVarGetPointer (conf.fetchCustom ("AMXParachuteCvar").chars ());
 
    // if no cvar or it's not enabled do not bother
    if (parachute && parachute->value > 0.0f) {
@@ -3346,7 +3346,7 @@ void Bot::spraypaint_ () {
 
       if (getTask ()->time - 0.5f < game.time ()) {
          // emit spraycan sound
-         engfuncs.pfnEmitSound (ent (), CHAN_VOICE, "player/sprayer.wav", 1.0f, ATTN_NORM, 0, 100);
+         g_engfuncs.pfnEmitSound (ent (), CHAN_VOICE, "player/sprayer.wav", 1.0f, ATTN_NORM, 0, 100);
          game.testLine (getEyesPos (), getEyesPos () + forward * 128.0f, TraceIgnore::Monsters, ent (), &tr);
 
          // paint the actual logo decal
@@ -5702,7 +5702,7 @@ void Bot::runMovement () {
    uint8 msecVal = computeMsec ();
    m_lastCommandTime = game.time ();
 
-   engfuncs.pfnRunPlayerMove (pev->pContainingEntity, m_moveAngles, m_moveSpeed, m_strafeSpeed, 0.0f, static_cast <uint16> (pev->button), static_cast <uint8> (pev->impulse), msecVal);
+   g_engfuncs.pfnRunPlayerMove (pev->pContainingEntity, m_moveAngles, m_moveSpeed, m_strafeSpeed, 0.0f, static_cast <uint16> (pev->button), static_cast <uint8> (pev->impulse), msecVal);
 
    // save our own copy of old buttons, since bot ai code is not running every frame now
    m_oldButtons = pev->button;

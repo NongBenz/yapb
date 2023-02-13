@@ -12,6 +12,8 @@ ConVar cv_version ("yb_version", product.version.chars (), Var::ReadOnly);
 DLL_FUNCTIONS dllapi;
 NEW_DLL_FUNCTIONS newapi;
 
+gamedll_funcs_t dllfuncs;
+
 meta_globals_t *gpMetaGlobals = nullptr;
 gamedll_funcs_t *gpGamedllFuncs = nullptr;
 mutil_funcs_t *gpMetaUtilFuncs = nullptr;
@@ -76,7 +78,7 @@ namespace variadic {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnClientCommand (ent, buffer);
+      g_engfuncs.pfnClientCommand (ent, buffer);
    }
 }
 
@@ -296,7 +298,7 @@ CR_EXPORT int GetEntityAPI (DLL_FUNCTIONS *table, int) {
       }
 
       // record stuff about radio and chat
-      bots.captureChatRadio (engfuncs.pfnCmd_Argv (0), engfuncs.pfnCmd_Argv (1), ent);
+      bots.captureChatRadio (g_engfuncs.pfnCmd_Argv (0), g_engfuncs.pfnCmd_Argv (1), ent);
 
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
@@ -514,7 +516,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
             ents.enable ();
             ents.setPaused (false);
          }
-         return engfuncs.pfnCreateNamedEntity (classname);
+         return g_engfuncs.pfnCreateNamedEntity (classname);
       };
    }
 
@@ -526,7 +528,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnLightStyle (style, val);
+      g_engfuncs.pfnLightStyle (style, val);
    };
 
    if (game.is (GameFlags::Legacy)) {
@@ -539,7 +541,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
          if (game.is (GameFlags::Metamod)) {
             RETURN_META_VALUE (MRES_IGNORED, static_cast <edict_t *> (nullptr));
          }
-         return engfuncs.pfnFindEntityByString (edictStartSearchAfter, field, value);
+         return g_engfuncs.pfnFindEntityByString (edictStartSearchAfter, field, value);
       };
    }
 
@@ -559,7 +561,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnEmitSound (entity, channel, sample, volume, attenuation, flags, pitch);
+      g_engfuncs.pfnEmitSound (entity, channel, sample, volume, attenuation, flags, pitch);
    };
 
    table->pfnMessageBegin = [] (int msgDest, int msgType, const float *origin, edict_t *ed) {
@@ -570,12 +572,12 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnMessageBegin (msgDest, msgType, origin, ed);
+      g_engfuncs.pfnMessageBegin (msgDest, msgType, origin, ed);
    };
 
    if (!game.is (GameFlags::Metamod)) {
       table->pfnMessageEnd = [] () {
-         engfuncs.pfnMessageEnd ();
+         g_engfuncs.pfnMessageEnd ();
 
          // this allows us to send messages right in handler code
          msgs.stop ();
@@ -589,7 +591,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnWriteByte (value);
+      g_engfuncs.pfnWriteByte (value);
    };
 
    table->pfnWriteChar = [] (int value) {
@@ -599,7 +601,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnWriteChar (value);
+      g_engfuncs.pfnWriteChar (value);
    };
 
    table->pfnWriteShort = [] (int value) {
@@ -609,7 +611,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnWriteShort (value);
+      g_engfuncs.pfnWriteShort (value);
    };
 
    table->pfnWriteLong = [] (int value) {
@@ -619,7 +621,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnWriteLong (value);
+      g_engfuncs.pfnWriteLong (value);
    };
 
    table->pfnWriteAngle = [] (float value) {
@@ -629,7 +631,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnWriteAngle (value);
+      g_engfuncs.pfnWriteAngle (value);
    };
 
    table->pfnWriteCoord = [] (float value) {
@@ -639,7 +641,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnWriteCoord (value);
+      g_engfuncs.pfnWriteCoord (value);
    };
 
    table->pfnWriteString = [] (const char *sz) {
@@ -649,7 +651,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnWriteString (sz);
+      g_engfuncs.pfnWriteString (sz);
    };
 
    table->pfnWriteEntity = [] (int value) {
@@ -659,7 +661,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnWriteEntity (value);
+      g_engfuncs.pfnWriteEntity (value);
    };
 
    if (!game.is (GameFlags::Metamod)) {
@@ -674,7 +676,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
          // using pfnMessageBegin (), it will know what message ID number to send, and the engine will
          // know what to do, only for non-metamod version
 
-         return msgs.add (name, engfuncs.pfnRegUserMsg (name, size)); // return privously registered message
+         return msgs.add (name, g_engfuncs.pfnRegUserMsg (name, size)); // return privously registered message
       };
    }
 
@@ -695,7 +697,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnClientPrintf (ent, printType, message);
+      g_engfuncs.pfnClientPrintf (ent, printType, message);
    };
 
    table->pfnCmd_Args = [] () {
@@ -717,7 +719,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META_VALUE (MRES_IGNORED, static_cast <const char *> (nullptr));
       }
-      return engfuncs.pfnCmd_Args (); // ask the client command string to the engine
+      return g_engfuncs.pfnCmd_Args (); // ask the client command string to the engine
    };
 
    table->pfnCmd_Argv = [] (int argc) {
@@ -739,7 +741,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META_VALUE (MRES_IGNORED, static_cast <const char *> (nullptr));
       }
-      return engfuncs.pfnCmd_Argv (argc); // ask the argument number "argc" to the engine
+      return g_engfuncs.pfnCmd_Argv (argc); // ask the argument number "argc" to the engine
    };
 
    table->pfnCmd_Argc = [] () {
@@ -761,7 +763,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META_VALUE (MRES_IGNORED, 0);
       }
-      return engfuncs.pfnCmd_Argc (); // ask the engine how many arguments there are
+      return g_engfuncs.pfnCmd_Argc (); // ask the engine how many arguments there are
    };
 
    table->pfnSetClientMaxspeed = [] (const edict_t *ent, float newMaxspeed) {
@@ -775,7 +777,7 @@ CR_LINKAGE_C int GetEngineFunctions (enginefuncs_t *table, int *) {
       if (game.is (GameFlags::Metamod)) {
          RETURN_META (MRES_IGNORED);
       }
-      engfuncs.pfnSetClientMaxspeed (ent, newMaxspeed);
+      g_engfuncs.pfnSetClientMaxspeed (ent, newMaxspeed);
    };
 
    table->pfnClientCommand = variadic::clientCommand;
@@ -948,7 +950,7 @@ DLL_GIVEFNPTRSTODLL GiveFnptrsToDll (enginefuncs_t *table, globalvars_t *glob) {
    // initialization stuff will be done later, when we'll be certain to have a multilayer game.
 
    // get the engine functions from the game...
-   memcpy (&engfuncs, table, sizeof (enginefuncs_t));
+   memcpy (&g_engfuncs, table, sizeof (enginefuncs_t));
    globals = glob;
 
    if (game.postload ()) {
@@ -1081,7 +1083,7 @@ void EntityLinkage::initialize () {
       m_dlclose.initialize ("kernel32.dll", "FreeLibrary", DLCLOSE_FUNCTION);
       m_dlclose.install (reinterpret_cast <void *> (EntityLinkage::closeHandler), true);
    }
-   m_self.locate (&engfuncs);
+   m_self.locate (&g_engfuncs);
 }
 
 // add linkents for android

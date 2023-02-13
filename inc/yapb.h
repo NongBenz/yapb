@@ -40,8 +40,7 @@ enum HLBool : int32 {
 
 #define SURF_DRAWTILED 0x20
 
-extern enginefuncs_t engfuncs;
-extern gamedll_funcs_t dllfuncs;
+extern enginefuncs_t g_engfuncs;
 
 // defines bots tasks
 CR_DECLARE_SCOPED_ENUM (Task,

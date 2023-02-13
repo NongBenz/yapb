@@ -82,20 +82,20 @@ BotManager::BotManager () {
 void BotManager::createKillerEntity () {
    // this function creates single trigger_hurt for using in Bot::kill, to reduce lags, when killing all the bots
 
-   m_killerEntity = engfuncs.pfnCreateNamedEntity (MAKE_STRING ("trigger_hurt"));
+   m_killerEntity = g_engfuncs.pfnCreateNamedEntity (MAKE_STRING ("trigger_hurt"));
 
    m_killerEntity->v.dmg = kInfiniteDistance;
    m_killerEntity->v.dmg_take = 1.0f;
    m_killerEntity->v.dmgtime = 2.0f;
    m_killerEntity->v.effects |= EF_NODRAW;
 
-   engfuncs.pfnSetOrigin (m_killerEntity, Vector (-kInfiniteDistance, -kInfiniteDistance, -kInfiniteDistance));
+   g_engfuncs.pfnSetOrigin (m_killerEntity, Vector (-kInfiniteDistance, -kInfiniteDistance, -kInfiniteDistance));
    MDLL_Spawn (m_killerEntity);
 }
 
 void BotManager::destroyKillerEntity () {
    if (!game.isNullEntity (m_killerEntity)) {
-      engfuncs.pfnRemoveEntity (m_killerEntity);
+      g_engfuncs.pfnRemoveEntity (m_killerEntity);
       m_killerEntity = nullptr;
    }
 }
@@ -223,7 +223,7 @@ BotCreateResult BotManager::create (StringRef name, int difficulty, int personal
       // buffer has been modified, copy to real name
       resultName = cr::move (prefixed);
    }
-   bot = engfuncs.pfnCreateFakeClient (resultName.chars ());
+   bot = g_engfuncs.pfnCreateFakeClient (resultName.chars ());
 
    if (game.isNullEntity (bot)) {
       ctrl.msg ("Maximum players reached (%d/%d). Unable to create Bot.", game.maxClients (), game.maxClients ());
@@ -942,7 +942,7 @@ Bot::Bot (edict_t *bot, int difficulty, int personality, int team, int skin) {
    pev = &bot->v;
 
    if (bot->pvPrivateData != nullptr) {
-      engfuncs.pfnFreeEntPrivateData (bot);
+      g_engfuncs.pfnFreeEntPrivateData (bot);
    }
 
    bot->pvPrivateData = nullptr;
@@ -952,17 +952,17 @@ Bot::Bot (edict_t *bot, int difficulty, int personality, int team, int skin) {
    bots.execGameEntity (bot);
 
    // set all info buffer keys for this bot
-   auto buffer = engfuncs.pfnGetInfoKeyBuffer (bot);
-   engfuncs.pfnSetClientKeyValue (clientIndex, buffer, "_vgui_menus", "0");
+   auto buffer = g_engfuncs.pfnGetInfoKeyBuffer (bot);
+   g_engfuncs.pfnSetClientKeyValue (clientIndex, buffer, "_vgui_menus", "0");
 
    if (!game.is (GameFlags::Legacy)) {
       if (cv_show_latency.int_ () == 1) {
-         engfuncs.pfnSetClientKeyValue (clientIndex, buffer, "*bot", "1");
+         g_engfuncs.pfnSetClientKeyValue (clientIndex, buffer, "*bot", "1");
       }
       auto avatar = conf.getRandomAvatar ();
 
       if (cv_show_avatars.bool_ () && !avatar.empty ()) {
-         engfuncs.pfnSetClientKeyValue (clientIndex, buffer, "*sid", avatar.chars ());
+         g_engfuncs.pfnSetClientKeyValue (clientIndex, buffer, "*sid", avatar.chars ());
       }
    }
 
@@ -1606,10 +1606,10 @@ void BotManager::captureChatRadio (const char *cmd, const char *arg, edict_t *en
          if (target != nullptr) {
             target->m_sayTextBuffer.entityIndex = game.indexOfPlayer (ent);
    
-            if (strings.isEmpty (engfuncs.pfnCmd_Args ())) {
+            if (strings.isEmpty (g_engfuncs.pfnCmd_Args ())) {
                continue;
             }
-            target->m_sayTextBuffer.sayText = engfuncs.pfnCmd_Args ();
+            target->m_sayTextBuffer.sayText = g_engfuncs.pfnCmd_Args ();
             target->m_sayTextBuffer.timeNextChat = game.time () + target->m_sayTextBuffer.chatDelay;
          }
       }
