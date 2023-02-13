@@ -5,7 +5,9 @@
 // SPDX-License-Identifier: MIT
 //
 
+
 #include <yapb.h>
+#include <util.h>
 
 ConVar cv_csdm_mode ("yb_csdm_mode", "0", "Enables or disables CSDM / FFA mode for bots.\nAllowed values: '0', '1', '2', '3'.\nIf '0', CSDM / FFA mode is auto-detected.\nIf '1', CSDM mode is enabled, but FFA is disabled.\nIf '2', CSDM and FFA mode is enabled.\nIf '3', CSDM and FFA mode is disabled.", true, 0.0f, 3.0f);
 
@@ -96,13 +98,13 @@ void Game::levelInitialize (edict_t *entities, int max) {
       if (!ent || ent->v.classname == 0) {
          continue;
       }
-      auto classname = ent->v.classname.chars ();
+      auto classname = STRING(ent->v.classname);
 
       if (strcmp (classname, "worldspawn") == 0) {
          m_startEntity = ent;
       }
       else if (strcmp (classname, "player_weaponstrip") == 0) {
-         if (is (GameFlags::Legacy) && strings.isEmpty (ent->v.target.chars ())) {
+         if (is (GameFlags::Legacy) && strings.isEmpty (STRING(ent->v.target))) {
             ent->v.target = ent->v.targetname = engfuncs.pfnAllocString ("fake");
          }
          else if (!is (GameFlags::ReGameDLL)) {
@@ -370,7 +372,7 @@ const char *Game::getRunningModName () {
 const char *Game::getMapName () {
    // this function gets the map name and store it in the map_name global string variable.
 
-   return strings.format ("%s", globals->mapname.chars ());
+   return strings.format ("%s", STRING(gpGlobals->mapname));
 }
 
 Vector Game::getEntityOrigin (edict_t *ent) {
@@ -950,7 +952,7 @@ void Game::applyGameModes () {
 }
 
 void Game::slowFrame () {
-   const auto nextUpdate = cr::clamp (75.0f * globals->frametime, 0.5f, 1.0f);
+   const auto nextUpdate = clamp (75.0f * gpGlobals->frametime, 0.5f, 1.0f);
 
    // run something that is should run more
    if (m_halfSecondFrame < time ()) {
@@ -1032,7 +1034,7 @@ bool Game::isShootableBreakable (edict_t *ent) {
       return false;
    }
 
-   if (strcmp (ent->v.classname.chars (), "func_breakable") == 0 || (strcmp (ent->v.classname.chars (), "func_pushable") == 0 && (ent->v.spawnflags & SF_PUSH_BREAKABLE)) || (strcmp (ent->v.classname.chars (), "func_wall") == 0 && ent->v.health < 500.0f)) {
+   if (strcmp (STRING(ent->v.classname), "func_breakable") == 0 || (strcmp (STRING(ent->v.classname), "func_pushable") == 0 && (ent->v.spawnflags & SF_PUSH_BREAKABLE)) || (strcmp (STRING(ent->v.classname), "func_wall") == 0 && ent->v.health < 500.0f)) {
       if (ent->v.takedamage != DAMAGE_NO && ent->v.impulse <= 0 && !(ent->v.flags & FL_WORLDBRUSH) && !(ent->v.spawnflags & SF_BREAK_TRIGGER_ONLY)) {
          return (ent->v.movetype == MOVETYPE_PUSH || ent->v.movetype == MOVETYPE_PUSHSTEP);
       }
@@ -1145,8 +1147,8 @@ template <typename S, typename M> bool LightMeasure::recursiveLightPoint (const 
    // determine which side of the node plane our points are on, fixme: optimize for axial
    auto plane = node->plane;
 
-   float front = (start | plane->normal) - plane->dist;
-   float back = (end | plane->normal) - plane->dist;
+   float front = DotProduct(start, plane->normal) - plane->dist;
+   float back = DotProduct(end, plane->normal) - plane->dist;
 
    int side = front < 0.0f;
 
@@ -1181,8 +1183,8 @@ template <typename S, typename M> bool LightMeasure::recursiveLightPoint (const 
       auto tex = surf->texinfo;
 
       // see where in lightmap space our intersection point is
-      int s = static_cast <int> ((mid | Vector (tex->vecs[0])) + tex->vecs[0][3]);
-      int t = static_cast <int> ((mid | Vector (tex->vecs[1])) + tex->vecs[1][3]);
+      int s = static_cast <int> (DotProduct(mid, Vector (tex->vecs[0])) + tex->vecs[0][3]);
+      int t = static_cast <int> (DotProduct(mid, Vector (tex->vecs[1])) + tex->vecs[1][3]);
 
       // not in the bounds of our lightmap? punt...
       if (s < surf->texturemins[0] || t < surf->texturemins[1]) {
@@ -1248,12 +1250,13 @@ float LightMeasure::getLightLevel (const Vector &point) {
 
    // it's depends if we're are on dedicated or on listenserver
    auto recursiveCheck = [&] () -> bool {
+      /*
       if (!game.isSoftwareRenderer ()) {
          return recursiveLightPoint <msurface_hw_t, mnode_hw_t> (reinterpret_cast <mnode_hw_t *> (m_worldModel->nodes), point, endPoint);
-      }
+      }*/
       return recursiveLightPoint <msurface_t, mnode_t> (m_worldModel->nodes, point, endPoint);
    };
-   return !recursiveCheck () ? 0.0f : 100 * cr::sqrtf (cr::min (75.0f, static_cast <float> (m_point.avg ())) / 75.0f);
+   return !recursiveCheck () ? 0.0f : 100 * sqrtf (cr::min (75.0f, static_cast <float> (m_point.avg ())) / 75.0f);
 }
 
 float LightMeasure::getSkyColor () {

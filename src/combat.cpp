@@ -101,7 +101,7 @@ bool Bot::isEnemyInvincible (edict_t *enemy) {
       return true;
    }
 
-   if (cr::fequal (v.takedamage, DAMAGE_NO)) {
+   if (fequal (v.takedamage, DAMAGE_NO)) {
       return true;
    }
 
@@ -320,7 +320,7 @@ bool Bot::lookupEnemies () {
             }
          }
       }
-      m_enemyUpdateTime = cr::clamp (game.time () + getFrameInterval () * 25.0f, 0.5f, 0.75f);
+      m_enemyUpdateTime = clamp (game.time () + getFrameInterval () * 25.0f, 0.5f, 0.75f);
 
       if (game.isNullEntity (newEnemy) && !game.isNullEntity (shieldEnemy)) {
          newEnemy = shieldEnemy;
@@ -403,7 +403,7 @@ bool Bot::lookupEnemies () {
          // shoot at dying players if no new enemy to give some more human-like illusion
          if (m_seeEnemyTime + 0.1f > game.time ()) {
             if (!usesSniper ()) {
-               m_shootAtDeadTime = game.time () + cr::clamp (m_agressionLevel * 1.25f, 0.45f, 0.60f);
+               m_shootAtDeadTime = game.time () + clamp (m_agressionLevel * 1.25f, 0.45f, 0.60f);
                m_actualReactionTime = 0.0f;
                m_states |= Sense::SuspectEnemy;
 
@@ -461,7 +461,7 @@ Vector Bot::getBodyOffsetError (float distance) {
    }
 
    if (m_aimErrorTime < game.time ()) {
-      const float error = distance / (cr::clamp (m_difficulty, 1, 3) * 1000.0f);
+      const float error = distance / (clamp (m_difficulty, 1, 3) * 1000.0f);
       Vector &maxs = m_enemy->v.maxs, &mins = m_enemy->v.mins;
 
       m_aimLastError = Vector (rg.get (mins.x * error, maxs.x * error), rg.get (mins.y * error, maxs.y * error), rg.get (mins.z * error, maxs.z * error));
@@ -631,7 +631,7 @@ bool Bot::isPenetrableObstacle (const Vector &dest) {
       const Vector &source = tr.vecEndPos;
       game.testLine (dest, source, TraceIgnore::Monsters, ent (), &tr);
 
-      if (!cr::fequal (tr.flFraction, 1.0f)) {
+      if (!fequal (tr.flFraction, 1.0f)) {
          if (tr.vecEndPos.distanceSq (dest) > cr::square (800.0f)) {
             return false;
          }
@@ -676,7 +676,7 @@ bool Bot::isPenetrableObstacle2 (const Vector &dest) {
 
    game.testLine (source, dest, TraceIgnore::Everything, ent (), &tr);
 
-   while (!cr::fequal (tr.flFraction, 1.0f) && numHits < 3) {
+   while (!fequal (tr.flFraction, 1.0f) && numHits < 3) {
       numHits++;
       thikness++;
 
@@ -690,7 +690,7 @@ bool Bot::isPenetrableObstacle2 (const Vector &dest) {
    }
 
    if (numHits < 3 && thikness < 98) {
-      if (dest.DistanceSquared (point) < 13143.0f) {
+      if (dest.distanceSq (point) < 13143.0f) {
          return true;
       }
    }
@@ -708,7 +708,7 @@ bool Bot::needToPauseFiring (float distance) {
       return true;
    }
 
-   if ((m_aimFlags & AimFlags::Enemy) && !m_enemyOrigin.IsZero ()) {
+   if ((m_aimFlags & AimFlags::Enemy) && !m_enemyOrigin.empty ()) {
       if (util.getShootingCone (ent (), m_enemyOrigin) > 0.92f && isEnemyBehindShield (m_enemy)) {
          return true;
       }
@@ -724,14 +724,14 @@ bool Bot::needToPauseFiring (float distance) {
    else if (distance < kDoubleSprayDistance) {
       offset = 10.0f;
    }
-   const float xPunch = cr::deg2rad (pev->punchangle.x);
-   const float yPunch = cr::deg2rad (pev->punchangle.y);
+   const float xPunch = deg2rad (pev->punchangle.x);
+   const float yPunch = deg2rad (pev->punchangle.y);
 
    const float interval = getFrameInterval ();
    const float tolerance = (100.0f - m_difficulty * 25.0f) / 99.0f;
 
    // check if we need to compensate recoil
-   if (cr::tanf (cr::sqrtf (cr::abs (xPunch * xPunch) + cr::abs (yPunch * yPunch))) * distance > offset + 30.0f + tolerance) {
+   if (tanf (sqrtf (cr::abs (xPunch * xPunch) + abs (yPunch * yPunch))) * distance > offset + 30.0f + tolerance) {
       if (m_firePause < game.time ()) {
          m_firePause = rg.get (0.65f, 0.65f + 0.3f * tolerance);
       }
@@ -829,7 +829,7 @@ void Bot::selectWeapons (float distance, int index, int id, int choosen) {
       m_strafeSpeed = 0.0f;
       m_navTimeset = game.time ();
 
-      if (cr::abs (pev->velocity.x) > 5.0f || cr::abs (pev->velocity.y) > 5.0f || cr::abs (pev->velocity.z) > 5.0f) {
+      if (abs (pev->velocity.x) > 5.0f || cr::abs (pev->velocity.y) > 5.0f || cr::abs (pev->velocity.z) > 5.0f) {
          m_sniperStopTime = game.time () + 2.0f;
          return;
       }
@@ -889,7 +889,7 @@ void Bot::selectWeapons (float distance, int index, int id, int choosen) {
          const float minDelay[] = { 0.0f, 0.1f, 0.2f, 0.3f, 0.4f, 0.6f };
          const float maxDelay[] = { 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.7f };
 
-         const int offset = cr::abs <int> (m_difficulty * 25 / 20 - 5);
+         const int offset = abs <int> (m_difficulty * 25 / 20 - 5);
 
          m_shootTime = game.time () + 0.1f + rg.get (minDelay[offset], maxDelay[offset]);
          m_zoomCheckTime = game.time ();
@@ -963,7 +963,7 @@ void Bot::fireWeapons () {
                   m_reloadState = Reload::Primary;
                   m_reloadCheckTime = game.time ();
 
-                  if (rg.chance (cr::abs (m_difficulty * 25 - 100)) && rg.chance (15)) {
+                  if (rg.chance (abs (m_difficulty * 25 - 100)) && rg.chance (15)) {
                      pushRadioMessage (Radio::NeedBackup);
                   }
                }
@@ -1144,7 +1144,7 @@ void Bot::attackMovement () {
             const auto &dirToPoint = (pev->origin - m_enemy->v.origin).normalize2d ();
             const auto &rightSide = m_enemy->v.v_angle.right ().normalize2d ();
 
-            if ((dirToPoint | rightSide) < 0) {
+            if (DotProduct(dirToPoint, rightSide) < 0) {
                m_combatStrafeDir = Dodge::Left;
             }
             else {
@@ -1176,7 +1176,7 @@ void Bot::attackMovement () {
             }
          }
 
-         if (m_difficulty >= Difficulty::Hard && (m_jumpTime + 5.0f < game.time () && isOnFloor () && rg.get (0, 1000) < (m_isReloading ? 8 : 2) && pev->velocity.length2d () > 120.0f) && !usesSniper ()) {
+         if (m_difficulty >= Difficulty::Hard && (m_jumpTime + 5.0f < game.time () && isOnFloor () && rg.get (0, 1000) < (m_isReloading ? 8 : 2) && pev->velocity.Length2D () > 120.0f) && !usesSniper ()) {
             pev->button |= IN_JUMP;
          }
 
@@ -1237,7 +1237,7 @@ bool Bot::hasSecondaryWeapon () {
 bool Bot::hasShield () {
    // this function returns true, if bot has a tactical shield
 
-   return strncmp (pev->viewmodel.chars (14), "v_shield_", 9) == 0;
+   return strncmp (STRING(pev->viewmodel + 14), "v_shield_", 9) == 0;
 }
 
 bool Bot::isShieldDrawn () {
@@ -1257,7 +1257,7 @@ bool Bot::isEnemyBehindShield (edict_t *enemy) {
    }
 
    // check if enemy has shield and this shield is drawn
-   if ((enemy->v.weaponanim == 6 || enemy->v.weaponanim == 7) && strncmp (enemy->v.viewmodel.chars (14), "v_shield_", 9) == 0) {
+   if ((enemy->v.weaponanim == 6 || enemy->v.weaponanim == 7) && strncmp (STRING(enemy->v.viewmodel + 14), "v_shield_", 9) == 0) {
       if (util.isInViewCone (pev->origin, enemy)) {
          return true;
       }
@@ -1379,7 +1379,7 @@ bool Bot::rateGroundWeapon (edict_t *ent) {
    auto tab = conf.getRawWeapons ();
 
    for (int i = 0; i < kNumWeapons; ++i) {
-      if (strcmp (tab[*pref].model, ent->v.model.chars (9)) == 0) {
+      if (strcmp (tab[*pref].model, STRING(ent->v.model + 9)) == 0) {
          groundIndex = i;
          break;
       }

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <vector.h>
+
 // noise types
 CR_DECLARE_SCOPED_ENUM (Noise,
    NeedHandle = cr::bit (0),
@@ -144,12 +146,12 @@ public:
 
    // gets the shooting cone deviation
    float getShootingCone (edict_t *ent, const Vector &position) {
-      return ent->v.v_angle.forward () | (position - (ent->v.origin + ent->v.view_ofs)).normalize (); // he's facing it, he meant it
+      return DotProduct(ent->v.v_angle.forward (),  (position - (ent->v.origin + ent->v.view_ofs)).normalize ()); // he's facing it, he meant it
    }
 
    // check if origin is inside view cone of entity
    bool isInViewCone (const Vector &origin, edict_t *ent) {
-      return getShootingCone (ent, origin) >= cr::cosf (cr::deg2rad ((ent->v.fov > 0 ? ent->v.fov : 90.0f) * 0.5f));
+      return getShootingCone (ent, origin) >= cosf (deg2rad ((ent->v.fov > 0 ? ent->v.fov : 90.0f) * 0.5f));
    }
 
 public:

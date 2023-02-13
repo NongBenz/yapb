@@ -36,10 +36,10 @@ public:
 
 public:
    FrustumData () {
-      nearHeight = 2.0f * cr::tanf (Fov * 0.0174532925f * 0.5f) * MinView;
+      nearHeight = 2.0f * tanf (Fov * 0.0174532925f * 0.5f) * MinView;
       nearWidth = nearHeight * AspectRatio;
 
-      farHeight = 2.0f * cr::tanf (Fov * 0.0174532925f * 0.5f) * MaxView;
+      farHeight = 2.0f * tanf (Fov * 0.0174532925f * 0.5f) * MaxView;
       farWidth = farHeight * AspectRatio;
    }
 };

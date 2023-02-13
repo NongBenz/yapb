@@ -419,7 +419,7 @@ void BotGraph::addPath (int addIndex, int pathIndex, float distance) {
    for (auto &link : path.links) {
       if (link.index == kInvalidNodeIndex) {
          link.index = static_cast <int16> (pathIndex);
-         link.distance = cr::abs (static_cast <int> (distance));
+         link.distance = abs (static_cast <int> (distance));
 
          ctrl.msg ("Path added from %d to %d.", addIndex, pathIndex);
          return;
@@ -441,7 +441,7 @@ void BotGraph::addPath (int addIndex, int pathIndex, float distance) {
       ctrl.msg ("Path added from %d to %d.", addIndex, pathIndex);
 
       path.links[slot].index = static_cast <int16> (pathIndex);
-      path.links[slot].distance = cr::abs (static_cast <int> (distance));
+      path.links[slot].distance = abs (static_cast <int> (distance));
    }
 }
 
@@ -772,7 +772,7 @@ void BotGraph::add (int type, const Vector &pos) {
             // check if the node is reachable from the new one
             game.testLine (newOrigin, calc.origin, TraceIgnore::Monsters, m_editor, &tr);
 
-            if (cr::fequal (tr.flFraction, 1.0f) && cr::abs (newOrigin.x - calc.origin.x) < 64.0f && cr::abs (newOrigin.y - calc.origin.y) < 64.0f && cr::abs (newOrigin.z - calc.origin.z) < m_autoPathDistance) {
+            if (fequal (tr.flFraction, 1.0f) && abs (newOrigin.x - calc.origin.x) < 64.0f && cr::abs (newOrigin.y - calc.origin.y) < 64.0f && cr::abs (newOrigin.z - calc.origin.z) < m_autoPathDistance) {
                float distance = newOrigin.distance (calc.origin);
 
                addPath (index, calc.number, distance);
@@ -946,7 +946,7 @@ int BotGraph::getFacingIndex () {
       auto angles = (to.angles () - m_editor->v.v_angle).clampAngles ();
 
       // skip the waypoints that are too far away from us, and we're not looking at them directly
-      if (to.lengthSq () > cr::square (500.0f) || cr::abs (angles.y) > result.second) {
+      if (to.LengthSquared () > cr::square (500.0f) || abs (angles.y) > result.second) {
          continue;
       }
      
@@ -954,7 +954,7 @@ int BotGraph::getFacingIndex () {
       TraceResult tr {};
       game.testLine (editorEyes, path.origin, TraceIgnore::Everything, m_editor, &tr);
 
-      if (!cr::fequal (tr.flFraction, 1.0f)) {
+      if (!fequal (tr.flFraction, 1.0f)) {
          continue;
       }
       const float bestAngle = angles.y;
@@ -1082,7 +1082,7 @@ void BotGraph::cachePoint (int index) {
 void BotGraph::setAutoPathDistance (const float distance) {
    m_autoPathDistance = distance;
 
-   if (cr::fzero (distance)) {
+   if (fzero (distance)) {
       ctrl.msg ("Autopathing is now disabled.");
    }
    else {
@@ -1192,7 +1192,7 @@ void BotGraph::calculatePathRadius (int index) {
          if (tr.flFraction < 1.0f) {
             game.testLine (radiusStart, radiusEnd, TraceIgnore::Monsters, nullptr, &tr);
 
-            if (tr.pHit && strncmp ("func_door", tr.pHit->v.classname.chars (), 9) == 0) {
+            if (tr.pHit && strncmp ("func_door", STRING(tr.pHit->v.classname), 9) == 0) {
                path.radius = 0.0f;
                wayBlocked = true;
 
@@ -1235,7 +1235,7 @@ void BotGraph::calculatePathRadius (int index) {
 
             break;
          }
-         direction.y = cr::normalizeAngles (direction.y + static_cast <float> (circleRadius));
+         direction.y = normalizeAngles (direction.y + static_cast <float> (circleRadius));
       }
 
       if (wayBlocked) {
@@ -1383,7 +1383,7 @@ void BotGraph::initLightLevels () {
    // this function get's the light level for each waypoin on the map
 
    // no nodes ? no light levels, and only one-time init
-   if (m_paths.empty () || !cr::fzero (m_paths[0].light)) {
+   if (m_paths.empty () || !fzero (m_paths[0].light)) {
       return;
    }
 
@@ -1880,7 +1880,7 @@ bool BotGraph::saveGraphData () {
       }
    }
    else if (!game.isNullEntity (m_editor)) {
-      editorName = m_editor->v.netname.chars ();
+      editorName = STRING(m_editor->v.netname);
    }
    else {
       editorName = product.name;
@@ -1917,7 +1917,7 @@ void BotGraph::saveOldFormat () {
    PODGraphHeader header {};
 
    strings.copy (header.header, kPodbotMagic, sizeof (kPodbotMagic));
-   strings.copy (header.author, m_editor->v.netname.chars (), cr::bufsize (header.author));
+   strings.copy (header.author, STRING(m_editor->v.netname), cr::bufsize (header.author));
    strings.copy (header.mapName, game.getMapName (), cr::bufsize (header.mapName));
 
    header.mapName[31] = 0;
@@ -1974,7 +1974,7 @@ bool BotGraph::isNodeReacheable (const Vector &src, const Vector &destination) {
    // check if we go through a func_illusionary, in which case return false
    game.testHull (src, destination, TraceIgnore::Monsters, head_hull, m_editor, &tr);
 
-   if (tr.pHit && strcmp ("func_illusionary", tr.pHit->v.classname.chars ()) == 0) {
+   if (tr.pHit && strcmp ("func_illusionary", STRING(tr.pHit->v.classname)) == 0) {
       return false; // don't add pathnodes through func_illusionaries
    }
 
@@ -1982,9 +1982,9 @@ bool BotGraph::isNodeReacheable (const Vector &src, const Vector &destination) {
    game.testLine (src, destination, TraceIgnore::Monsters, m_editor, &tr);
 
    // if node is visible from current position (even behind head)...
-   if (tr.pHit && (tr.flFraction >= 1.0f || strncmp ("func_door", tr.pHit->v.classname.chars (), 9) == 0)) {
+   if (tr.pHit && (tr.flFraction >= 1.0f || strncmp ("func_door", STRING(tr.pHit->v.classname), 9) == 0)) {
       // if it's a door check if nothing blocks behind
-      if (strncmp ("func_door", tr.pHit->v.classname.chars (), 9) == 0) {
+      if (strncmp ("func_door", STRING(tr.pHit->v.classname), 9) == 0) {
          game.testLine (tr.vecEndPos, destination, TraceIgnore::Monsters, tr.pHit, &tr);
 
          if (tr.flFraction < 1.0f) {
@@ -2074,7 +2074,7 @@ void BotGraph::rebuildVisibility () {
          game.testLine (sourceDuck, dest, TraceIgnore::Monsters, nullptr, &tr);
 
          // check if line of sight to object is not blocked (i.e. visible)
-         if (!cr::fequal (tr.flFraction, 1.0f) || tr.fStartSolid) {
+         if (!fequal (tr.flFraction, 1.0f) || tr.fStartSolid) {
             res = 1;
          }
          else {
@@ -2085,7 +2085,7 @@ void BotGraph::rebuildVisibility () {
          game.testLine (sourceStand, dest, TraceIgnore::Monsters, nullptr, &tr);
 
          // check if line of sight to object is not blocked (i.e. visible)
-         if (cr::fequal (tr.flFraction, 1.0f) || tr.fStartSolid) {
+         if (fequal (tr.flFraction, 1.0f) || tr.fStartSolid) {
             res |= 1;
          }
 
@@ -2102,7 +2102,7 @@ void BotGraph::rebuildVisibility () {
             game.testLine (sourceDuck, dest, TraceIgnore::Monsters, nullptr, &tr);
 
             // check if line of sight to object is not blocked (i.e. visible)
-            if (!cr::fequal (tr.flFraction, 1.0f) || tr.fStartSolid) {
+            if (!fequal (tr.flFraction, 1.0f) || tr.fStartSolid) {
                res |= 2;
             }
             else {
@@ -2111,7 +2111,7 @@ void BotGraph::rebuildVisibility () {
             game.testLine (sourceStand, dest, TraceIgnore::Monsters, nullptr, &tr);
 
             // check if line of sight to object is not blocked (i.e. visible)
-            if (!cr::fequal (tr.flFraction, 1.0f) || tr.fStartSolid) {
+            if (!fequal (tr.flFraction, 1.0f) || tr.fStartSolid) {
                res |= 1;
             }
             else {
@@ -2409,7 +2409,7 @@ void BotGraph::frame () {
 
       // if radius is nonzero, draw a full circle
       if (path.radius > 0.0f) {
-         float sqr = cr::sqrtf (cr::square (path.radius) * 0.5f);
+         float sqr = sqrtf (cr::square (path.radius) * 0.5f);
          
          game.drawLine (m_editor, origin + Vector (path.radius, 0.0f, 0.0f), origin + Vector (sqr, -sqr, 0.0f), 5, 0, radiusColor, 200, 0, 10);
          game.drawLine (m_editor, origin + Vector (sqr, -sqr, 0.0f), origin + Vector (0.0f, -path.radius, 0.0f), 5, 0, radiusColor, 200, 0, 10);
@@ -2424,7 +2424,7 @@ void BotGraph::frame () {
          game.drawLine (m_editor, origin + Vector (sqr, sqr, 0.0f), origin + Vector (path.radius, 0.0f, 0.0f), 5, 0, radiusColor, 200, 0, 10);
       }
       else {
-         float sqr = cr::sqrtf (32.0f);
+         float sqr = sqrtf (32.0f);
 
          game.drawLine (m_editor, origin + Vector (sqr, -sqr, 0.0f), origin + Vector (-sqr, sqr, 0.0f), 5, 0, radiusColor, 200, 0, 10);
          game.drawLine (m_editor, origin + Vector (-sqr, -sqr, 0.0f), origin + Vector (sqr, sqr, 0.0f), 5, 0, radiusColor, 200, 0, 10);
@@ -2769,7 +2769,7 @@ void BotGraph::addBasic () {
       TraceResult tr {};
       Vector up, down, front, back;
 
-      const Vector &diff = ((ladderLeft - ladderRight) ^ Vector (0.0f, 0.0f, 0.0f)).normalize () * 15.0f;
+      const Vector &diff = CrossProduct(ladderLeft - ladderRight, Vector (0.0f, 0.0f, 0.0f)).normalize () * 15.0f;
       front = back = game.getEntityOrigin (ent);
 
       front = front + diff; // front
@@ -2780,7 +2780,7 @@ void BotGraph::addBasic () {
 
       game.testHull (down, up, TraceIgnore::Monsters, point_hull, nullptr, &tr);
 
-      if (engfuncs.pfnPointContents (up) == CONTENTS_SOLID || !cr::fequal (tr.flFraction, 1.0f)) {
+      if (engfuncs.pfnPointContents (up) == CONTENTS_SOLID || !fequal (tr.flFraction, 1.0f)) {
          up = down = back;
          down.z = ent->v.absmax.z;
       }
@@ -2996,9 +2996,9 @@ BotGraph::Bucket BotGraph::locateBucket (const Vector &pos) {
    constexpr auto size = static_cast <float> (kMaxNodes * 2);
 
    return {
-       cr::abs (static_cast <int> ((pos.x + size) / kMaxBucketSize)),
-       cr::abs (static_cast <int> ((pos.y + size) / kMaxBucketSize)),
-       cr::abs (static_cast <int> ((pos.z + size) / kMaxBucketSize))
+       abs (static_cast <int> ((pos.x + size) / kMaxBucketSize)),
+       abs (static_cast <int> ((pos.y + size) / kMaxBucketSize)),
+       abs (static_cast <int> ((pos.z + size) / kMaxBucketSize))
    };
 }
 
@@ -3053,14 +3053,14 @@ void BotGraph::updateGlobalPractice () {
                if (i == j) {
                   continue;
                }
-               (practice + (i * length ()) + j)->damage[team] = static_cast <int16> (cr::clamp (getDangerDamage (team, i, j) - kHalfDamageVal, 0, kMaxPracticeDamageValue));
+               (practice + (i * length ()) + j)->damage[team] = static_cast <int16> (clamp (getDangerDamage (team, i, j) - kHalfDamageVal, 0, kMaxPracticeDamageValue));
             }
          }
       }
    }
 
    for (int team = Team::Terrorist; team < kGameTeamNum; ++team) {
-      m_highestDamage[team] = cr::clamp (m_highestDamage [team] - kHalfDamageVal, 1, kMaxPracticeDamageValue);
+      m_highestDamage[team] = clamp (m_highestDamage [team] - kHalfDamageVal, 1, kMaxPracticeDamageValue);
    }
 }
 

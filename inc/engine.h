@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <util.h>
 #include <com_model.h>
 #define MAX_LIGHTSTYLES 64
 #define MAX_LIGHTSTYLEVALUE 256
@@ -225,12 +226,12 @@ public:
 public:
    // get the current time on server
    float time () const {
-      return globals->time;
+      return gpGlobals->time;
    }
 
    // get "maxplayers" limit on server
    int maxClients () const  {
-      return globals->maxClients;
+      return gpGlobals->maxClients;
    }
 
    // get the fakeclient command interface
@@ -510,11 +511,11 @@ public:
 
 public:
    static inline uint16 fu16 (float value, float scale) {
-      return cr::clamp <uint16> (static_cast <uint16> (value * cr::bit (static_cast <short> (scale))), 0, USHRT_MAX);
+      return clamp <uint16> (static_cast <uint16> (value * cr::bit (static_cast <short> (scale))), 0, USHRT_MAX);
    }
 
    static inline short fs16 (float value, float scale) {
-      return cr::clamp <short> (static_cast <short> (value * cr::bit (static_cast <short> (scale))), -SHRT_MAX, SHRT_MAX);
+      return clamp <short> (static_cast <short> (value * cr::bit (static_cast <short> (scale))), -SHRT_MAX, SHRT_MAX);
    }
 };
 

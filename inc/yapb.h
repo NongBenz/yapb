@@ -12,7 +12,10 @@
 
 
 #include <extdll.h>
-#include <metamod.h>
+#include <util.h>
+#include <dllapi.h>
+#include <h_export.h>
+#include <meta_api.h>
 #include <hlsdk/physint.h>
 
 #include <pm_defs.h>
@@ -35,7 +38,10 @@ enum HLBool : int32 {
   HLFalse, HLTrue
 };
 
+#define SURF_DRAWTILED 0x20
 
+extern enginefuncs_t engfuncs;
+extern gamedll_funcs_t dllfuncs;
 
 // defines bots tasks
 CR_DECLARE_SCOPED_ENUM (Task,

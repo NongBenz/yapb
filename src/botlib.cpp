@@ -68,13 +68,13 @@ void Bot::pushMsgQueue (int message) {
 }
 
 float Bot::isInFOV (const Vector &destination) {
-   float entityAngle = cr::modAngles (destination.yaw ()); // find yaw angle from source to destination...
-   float viewAngle = cr::modAngles (pev->v_angle.y); // get bot's current view angle...
+   float entityAngle = modAngles (destination.yaw ()); // find yaw angle from source to destination...
+   float viewAngle = modAngles (pev->v_angle.y); // get bot's current view angle...
 
    // return the absolute value of angle to destination entity
    // zero degrees means straight ahead, 45 degrees to the left or
    // 45 degrees to the right is the limit of the normal view angle
-   float absoluteAngle = cr::abs (viewAngle - entityAngle);
+   float absoluteAngle = abs (viewAngle - entityAngle);
 
    if (absoluteAngle > 180.0f) {
       absoluteAngle = 360.0f - absoluteAngle;
@@ -98,7 +98,7 @@ bool Bot::seesItem (const Vector &destination, const char *classname) {
 
    // check if line of sight to object is not blocked (i.e. visible)
    if (tr.flFraction < 1.0f && tr.pHit) {
-      return strcmp (tr.pHit->v.classname.chars (), classname) == 0;
+      return strcmp (STRING(tr.pHit->v.classname), classname) == 0;
    }
    return true;
 }
@@ -183,7 +183,7 @@ void Bot::checkGrenadesThrow () {
             allowThrowing = false;
          }
          else {
-            float radius = m_lastEnemy->v.velocity.length2d ();
+            float radius = m_lastEnemy->v.velocity.Length2D ();
             const Vector &pos = (m_lastEnemy->v.velocity * 0.5f).get2d () + m_lastEnemy->v.origin;
 
             if (radius < 164.0f) {
@@ -207,7 +207,7 @@ void Bot::checkGrenadesThrow () {
 
                auto throwPos = calcThrow (getEyesPos (), m_throw);
 
-               if (throwPos.lengthSq () < 100.0f) {
+               if (throwPos.LengthSquared () < 100.0f) {
                   throwPos = calcToss (getEyesPos (), m_throw);
                }
 
@@ -246,7 +246,7 @@ void Bot::checkGrenadesThrow () {
          if (allowThrowing) {
             auto throwPos = calcThrow (getEyesPos (), m_throw);
 
-            if (throwPos.lengthSq () < 100.0f) {
+            if (throwPos.LengthSquared () < 100.0f) {
                throwPos = calcToss (getEyesPos (), m_throw);
             }
 
@@ -331,12 +331,12 @@ void Bot::avoidGrenades () {
       if (!seesEntity (pent->v.origin) && isInFOV (pent->v.origin - getEyesPos ()) > pev->fov * 0.5f) {
          continue;
       }
-      auto model = pent->v.model.chars (9);
+      auto model = STRING(pent->v.model + 9);
 
       if (m_preventFlashing < game.time () && m_personality == Personality::Rusher && m_difficulty == Difficulty::Expert && strcmp (model, "flashbang.mdl") == 0) {
          // don't look at flash bang
          if (!(m_states & Sense::SeeingEnemy)) {
-            pev->v_angle.y = cr::normalizeAngles ((game.getEntityOrigin (pent) - getEyesPos ()).angles ().y + 180.0f);
+            pev->v_angle.y = normalizeAngles ((game.getEntityOrigin (pent) - getEyesPos ()).angles ().y + 180.0f);
 
             m_canChooseAimDirection = false;
             m_preventFlashing = game.time () + rg.get (1.0f, 2.0f);
@@ -359,7 +359,7 @@ void Bot::avoidGrenades () {
                const auto &dirToPoint = (pev->origin - pent->v.origin).normalize2d ();
                const auto &rightSide = pev->v_angle.right ().normalize2d ();
 
-               if ((dirToPoint | rightSide) > 0.0f) {
+               if (DotProduct(dirToPoint, rightSide) > 0.0f) {
                   m_needAvoidGrenade = -1;
                }
                else {
@@ -471,7 +471,7 @@ edict_t *Bot::lookupBreakable () {
    TraceResult tr {};
    game.testLine (pev->origin, pev->origin + (m_destOrigin - pev->origin).normalize () * 72.0f, TraceIgnore::None, ent (), &tr);
 
-   if (!cr::fequal (tr.flFraction, 1.0f)) {
+   if (!fequal (tr.flFraction, 1.0f)) {
       auto ent = tr.pHit;
 
       // check if this isn't a triggered (bomb) breakable and if it takes damage. if true, shoot the crap!
@@ -482,7 +482,7 @@ edict_t *Bot::lookupBreakable () {
    }
    game.testLine (getEyesPos (), getEyesPos () + (m_destOrigin - getEyesPos ()).normalize () * 72.0f, TraceIgnore::None, ent (), &tr);
 
-   if (!cr::fequal (tr.flFraction, 1.0f)) {
+   if (!fequal (tr.flFraction, 1.0f)) {
       auto ent = tr.pHit;
 
       if (game.isShootableBreakable (ent)) {
@@ -548,7 +548,7 @@ void Bot::updatePickups () {
          }
 
          if (ent == pickupItem) {
-            if (seesItem (origin, ent->v.classname.chars ())) {
+            if (seesItem (origin, STRING(ent->v.classname))) {
                itemExists = true;
             }
             break;
@@ -577,7 +577,7 @@ void Bot::updatePickups () {
       // get the entity origin
       const auto &origin = game.getEntityOrigin (ent);
      
-      if ((ent->v.effects & EF_NODRAW) || ent == m_itemIgnore || cr::abs (origin.z - pev->origin.z) > 96.0f) {
+      if ((ent->v.effects & EF_NODRAW) || ent == m_itemIgnore || abs (origin.z - pev->origin.z) > 96.0f) {
          continue; // someone owns this weapon or it hasn't respawned yet
       }
 
@@ -586,8 +586,8 @@ void Bot::updatePickups () {
          continue;
       }
 
-      auto classname = ent->v.classname.chars ();
-      auto model = ent->v.model.chars (9);
+      auto classname = STRING(ent->v.classname);
+      auto model = STRING(ent->v.model + 9);
 
       // check if line of sight to object is not blocked (i.e. visible)
       if (seesItem (origin, classname)) {
@@ -1029,8 +1029,8 @@ void Bot::pushChatterMessage (int message) {
    auto messageRepeat = conf.getChatterMessageRepeatInterval (message);
    auto &messageTimer = m_chatterTimes[message];
 
-   if (messageTimer < game.time () || cr::fequal (messageTimer, kMaxChatterRepeatInterval)) {
-      if (!cr::fequal (messageRepeat, kMaxChatterRepeatInterval)) {
+   if (messageTimer < game.time () || fequal (messageTimer, kMaxChatterRepeatInterval)) {
+      if (!fequal (messageRepeat, kMaxChatterRepeatInterval)) {
          messageTimer = game.time () + messageRepeat;
       }
       sendMessage = true;
@@ -1207,7 +1207,7 @@ bool Bot::isWeaponRestricted (int weaponIndex) {
 
    for (const auto &ban : bannedWeapons) {
       // check is this weapon is banned
-      if (ban == alias) {
+      if (StringRef(ban) == alias) {
          return true;
       }
    }
@@ -1300,7 +1300,7 @@ int Bot::pickBestWeapon (int *vec, int count, int moneySave) {
       for (int *begin = vec, *end = vec + count - 1; begin < end; ++begin, --end) {
          cr::swap (*end, *begin);
       }
-      return vec[static_cast <int> (static_cast <float> (count - 1) * cr::log10 (rg.get (1.0f, cr::powf (10.0f, buyFactor))) / buyFactor + 0.5f)];
+      return vec[static_cast <int> (static_cast <float> (count - 1) * log10 (rg.get (1.0f, powf (10.0f, buyFactor))) / buyFactor + 0.5f)];
    }
 
    int chance = 95;
@@ -1752,10 +1752,10 @@ void Bot::overrideConditions () {
       if (length > 100.0f && (m_states & Sense::SeeingEnemy)) {
          int nearestToEnemyPoint = graph.getNearest (m_enemy->v.origin);
 
-         if (nearestToEnemyPoint != kInvalidNodeIndex && nearestToEnemyPoint != m_currentNodeIndex && cr::abs (graph[nearestToEnemyPoint].origin.z - m_enemy->v.origin.z) < 16.0f) {
+         if (nearestToEnemyPoint != kInvalidNodeIndex && nearestToEnemyPoint != m_currentNodeIndex && abs (graph[nearestToEnemyPoint].origin.z - m_enemy->v.origin.z) < 16.0f) {
             float taskTime = game.time () + length / pev->maxspeed * 0.5f;
 
-            if (getCurrentTaskId () != Task::MoveToPosition && !cr::fequal (getTask ()->desire, TaskPri::Hide)) {
+            if (getCurrentTaskId () != Task::MoveToPosition && !fequal (getTask ()->desire, TaskPri::Hide)) {
                startTask (Task::MoveToPosition, TaskPri::Hide, nearestToEnemyPoint, taskTime, true);
             }
             m_isEnemyReachable = false;
@@ -2103,7 +2103,7 @@ void Bot::startTask (Task id, float desire, int data, float time, bool resume) {
 
    for (auto &task : m_tasks) {
       if (task.id == id) {
-         if (!cr::fequal (task.desire, desire)) {
+         if (!fequal (task.desire, desire)) {
             task.desire = desire;
          }
          return;
@@ -2784,7 +2784,7 @@ void Bot::updateAimDir () {
          if (angleCorrection > 45.0f) {
             angleCorrection = 45.0f;
          }
-         coordCorrection = throwDistance * cr::tanf (cr::deg2rad (angleCorrection)) + 0.25f * (m_throw.z - pev->origin.z);
+         coordCorrection = throwDistance * tanf (deg2rad (angleCorrection)) + 0.25f * (m_throw.z - pev->origin.z);
       }
       m_lookAt.z += coordCorrection * 0.5f;
    }
@@ -2848,7 +2848,7 @@ void Bot::updateAimDir () {
          auto radius = graph[index].radius;
 
          if (radius > 0.0f) {
-            return Vector (pev->angles.x, cr::normalizeAngles (pev->angles.y + rg.get (-90.0f, 90.0f)), 0.0f).forward () * rg.get (2.0f, 4.0f);
+            return Vector (pev->angles.x, normalizeAngles (pev->angles.y + rg.get (-90.0f, 90.0f)), 0.0f).forward () * rg.get (2.0f, 4.0f);
          }
          return nullptr;
       };
@@ -2935,12 +2935,12 @@ void Bot::checkParachute () {
       if (isOnLadder () || pev->velocity.z > -50.0f || isOnFloor ()) {
          m_fallDownTime = 0.0f;
       }
-      else if (cr::fzero (m_fallDownTime)) {
+      else if (fzero (m_fallDownTime)) {
          m_fallDownTime = game.time ();
       }
 
       // press use anyway
-      if (!cr::fzero (m_fallDownTime) && m_fallDownTime + 0.35f < game.time ()) {
+      if (!fzero (m_fallDownTime) && m_fallDownTime + 0.35f < game.time ()) {
          pev->button |= IN_USE;
       }
    }
@@ -2999,7 +2999,7 @@ void Bot::update () {
    m_canChooseAimDirection = true;
    m_notKilled = util.isAlive (ent ());
    m_team = game.getTeam (ent ());
-   m_healthValue = cr::clamp (pev->health, 0.0f, 100.0f);
+   m_healthValue = clamp (pev->health, 0.0f, 100.0f);
 
    if (m_team == Team::Terrorist && game.mapIs (MapFlags::Demolition)) {
       m_hasC4 = !!(pev->weapons & cr::bit (Weapon::C4));
@@ -3302,13 +3302,13 @@ void Bot::normal_ () {
       }
    }
    else {
-      if (!(pev->flags & FL_DUCKING) && !cr::fequal (m_minSpeed, pev->maxspeed) && m_minSpeed > 1.0f) {
+      if (!(pev->flags & FL_DUCKING) && !fequal (m_minSpeed, pev->maxspeed) && m_minSpeed > 1.0f) {
          m_moveSpeed = m_minSpeed;
       }
    }
    float shiftSpeed = getShiftSpeed ();
 
-   if ((!cr::fzero (m_moveSpeed) && m_moveSpeed > shiftSpeed) && (cv_walking_allowed.bool_ () && mp_footsteps.bool_ ()) && m_difficulty > Difficulty::Normal && !(m_aimFlags & AimFlags::Enemy) && (m_heardSoundTime + 6.0f >= game.time () || (m_states & Sense::SuspectEnemy)) && numEnemiesNear (pev->origin, 768.0f) >= 1 && !cv_jasonmode.bool_ () && !bots.isBombPlanted ()) {
+   if ((!fzero (m_moveSpeed) && m_moveSpeed > shiftSpeed) && (cv_walking_allowed.bool_ () && mp_footsteps.bool_ ()) && m_difficulty > Difficulty::Normal && !(m_aimFlags & AimFlags::Enemy) && (m_heardSoundTime + 6.0f >= game.time () || (m_states & Sense::SuspectEnemy)) && numEnemiesNear (pev->origin, 768.0f) >= 1 && !cv_jasonmode.bool_ () && !bots.isBombPlanted ()) {
       m_moveSpeed = shiftSpeed;
    }
 
@@ -3556,7 +3556,7 @@ void Bot::pause_ () {
    // is bot blinded and above average difficulty?
    if (m_viewDistance < 500.0f && m_difficulty >= Difficulty::Normal) {
       // go mad!
-      m_moveSpeed = -cr::abs ((m_viewDistance - 500.0f) * 0.5f);
+      m_moveSpeed = -abs ((m_viewDistance - 500.0f) * 0.5f);
 
       if (m_moveSpeed < -pev->maxspeed) {
          m_moveSpeed = -pev->maxspeed;
@@ -3657,7 +3657,7 @@ void Bot::camp_ () {
             }
             const Vector &dotB = (graph[i].origin - pev->origin).normalize2d ();
 
-            if ((dotA | dotB) > 0.9f) {
+            if (DotProduct(dotA , dotB) > 0.9f) {
                int distance = static_cast <int> (graph[i].origin.distance (pev->origin));
 
                if (numFoundPoints >= 3) {
@@ -4069,7 +4069,7 @@ void Bot::followUser_ () {
       }
    }
 
-   if (!cr::fzero (m_targetEntity->v.maxspeed) && m_targetEntity->v.maxspeed < pev->maxspeed) {
+   if (!fzero (m_targetEntity->v.maxspeed) && m_targetEntity->v.maxspeed < pev->maxspeed) {
       m_moveSpeed = m_targetEntity->v.maxspeed;
    }
 
@@ -4083,7 +4083,7 @@ void Bot::followUser_ () {
    else {
       m_moveSpeed = 0.0f;
 
-      if (cr::fzero (m_followWaitTime)) {
+      if (fzero (m_followWaitTime)) {
          m_followWaitTime = game.time ();
       }
       else {
@@ -4168,11 +4168,11 @@ void Bot::throwExplosive_ () {
    }
    m_grenade = calcThrow (getEyesPos (), dest);
 
-   if (m_grenade.lengthSq () < 100.0f) {
+   if (m_grenade.LengthSquared () < 100.0f) {
       m_grenade = calcToss (pev->origin, dest);
    }
 
-   if (m_grenade.lengthSq () <= 100.0f) {
+   if (m_grenade.LengthSquared () <= 100.0f) {
       m_grenadeCheckTime = game.time () + kGrenadeCheckTime;
 
       selectBestWeapon ();
@@ -4234,11 +4234,11 @@ void Bot::throwFlashbang_ () {
    }
    m_grenade = calcThrow (getEyesPos (), dest);
 
-   if (m_grenade.lengthSq () < 100.0f) {
+   if (m_grenade.LengthSquared () < 100.0f) {
       m_grenade = calcToss (pev->origin, dest);
    }
 
-   if (m_grenade.lengthSq () <= 100.0f) {
+   if (m_grenade.LengthSquared () <= 100.0f) {
       m_grenadeCheckTime = game.time () + kGrenadeCheckTime;
 
       selectBestWeapon ();
@@ -4524,7 +4524,7 @@ void Bot::pickupItem_ () {
          auto &info = conf.getWeapons ();
 
          for (index = 0; index < 7; ++index) {
-            if (strcmp (info[index].model, m_pickupItem->v.model.chars (9)) == 0) {
+            if (strcmp (info[index].model, STRING(m_pickupItem->v.model + 9)) == 0) {
                break;
             }
          }
@@ -4644,7 +4644,7 @@ void Bot::pickupItem_ () {
 
             // find the nearest 'unused' hostage within the area
             game.searchEntities (pev->origin, 768.0f, [&] (edict_t *ent) {
-               auto classname = ent->v.classname.chars ();
+               auto classname = STRING(ent->v.classname);
 
                if (strncmp ("hostage_entity", classname, 14) != 0 && strncmp ("monster_scientist", classname, 17) != 0) {
                   return EntitySearchResult::Continue;
@@ -4944,7 +4944,7 @@ void Bot::logic () {
       m_lastUsedNodesTime = game.time ();
 
       // press jump button if we need to leave the ladder
-      if (!(m_path->flags & NodeFlag::Ladder) && prevLadder && isOnFloor () && isOnLadder () && m_moveSpeed > 50.0f && pev->velocity.length () < 50.0f) {
+      if (!(m_path->flags & NodeFlag::Ladder) && prevLadder && isOnFloor () && isOnLadder () && m_moveSpeed > 50.0f && pev->velocity.Length () < 50.0f) {
          pev->button |= IN_JUMP;
          m_jumpTime = game.time () + 1.0f;
       }
@@ -5061,7 +5061,7 @@ void Bot::logic () {
    }
 
    // save the previous speed (for checking if stuck)
-   m_prevSpeed = cr::abs (m_moveSpeed);
+   m_prevSpeed = abs (m_moveSpeed);
    m_lastDamageType = -1; // reset damage
 }
 
@@ -5145,15 +5145,15 @@ void Bot::showDebugOverlay () {
       String enemy = "(none)";
 
       if (!game.isNullEntity (m_enemy)) {
-         enemy = m_enemy->v.netname.chars ();
+         enemy = STRING(m_enemy->v.netname);
       }
       else if (!game.isNullEntity (m_lastEnemy)) {
-         enemy.assignf ("%s (L)", m_lastEnemy->v.netname.chars ());
+         enemy.assignf ("%s (L)", STRING(m_lastEnemy->v.netname));
       }
       String pickup = "(none)";
 
       if (!game.isNullEntity (m_pickupItem)) {
-         pickup = m_pickupItem->v.classname.chars ();
+         pickup = STRING(m_pickupItem->v.classname);
       }
       String aimFlags;
 
@@ -5167,7 +5167,7 @@ void Bot::showDebugOverlay () {
       auto weapon = util.weaponIdToAlias (m_currentWeapon);
 
       String debugData;
-      debugData.assignf ("\n\n\n\n\n%s (H:%.1f/A:%.1f)- Task: %d=%s Desire:%.02f\nItem: %s Clip: %d Ammo: %d%s Money: %d AimFlags: %s\nSP=%.02f SSP=%.02f I=%d PG=%d G=%d T: %.02f MT: %d\nEnemy=%s Pickup=%s Type=%s\n", pev->netname.chars (), m_healthValue, pev->armorvalue, taskID, tasks[taskID], getTask ()->desire, weapon, getAmmoInClip (), getAmmo (), m_isReloading ? " (R)" : "", m_moneyAmount, aimFlags.trim (), m_moveSpeed, m_strafeSpeed, index, m_prevGoalIndex, goal, m_navTimeset - game.time (), pev->movetype, enemy, pickup, personalities[m_personality]);
+      debugData.assignf ("\n\n\n\n\n%s (H:%.1f/A:%.1f)- Task: %d=%s Desire:%.02f\nItem: %s Clip: %d Ammo: %d%s Money: %d AimFlags: %s\nSP=%.02f SSP=%.02f I=%d PG=%d G=%d T: %.02f MT: %d\nEnemy=%s Pickup=%s Type=%s\n", STRING(pev->netname), m_healthValue, pev->armorvalue, taskID, tasks[taskID], getTask ()->desire, weapon, getAmmoInClip (), getAmmo (), m_isReloading ? " (R)" : "", m_moneyAmount, aimFlags.trim (), m_moveSpeed, m_strafeSpeed, index, m_prevGoalIndex, goal, m_navTimeset - game.time (), pev->movetype, enemy, pickup, personalities[m_personality]);
 
       MessageWriter (MSG_ONE_UNRELIABLE, SVC_TEMPENTITY, nullptr, game.getLocalEntity ())
          .writeByte (TE_TEXTMESSAGE)
@@ -5347,7 +5347,7 @@ void Bot::updatePracticeValue (int damage) {
    // only rate goal waypoint if bot died because of the damage
    // FIXME: could be done a lot better, however this cares most about damage done by sniping or really deadly weapons
    if (m_healthValue - damage <= 0) {
-      graph.setDangerValue (m_team, m_chosenGoalIndex, m_prevGoalIndex, cr::clamp (graph.getDangerValue (m_team, m_chosenGoalIndex, m_prevGoalIndex) - static_cast <int> (m_healthValue / 20), -kMaxPracticeGoalValue, kMaxPracticeGoalValue));
+      graph.setDangerValue (m_team, m_chosenGoalIndex, m_prevGoalIndex, clamp (graph.getDangerValue (m_team, m_chosenGoalIndex, m_prevGoalIndex) - static_cast <int> (m_healthValue / 20), -kMaxPracticeGoalValue, kMaxPracticeGoalValue));
    }
 }
 
@@ -5385,13 +5385,13 @@ void Bot::updatePracticeDamage (edict_t *attacker, int damage) {
 
    if (m_healthValue > 20.0f) {
       if (victimTeam == Team::Terrorist || victimTeam == Team::CT) {
-         graph.setDangerDamage (victimIndex, victimIndex, victimIndex, cr::clamp (graph.getDangerDamage (victimTeam, victimIndex, victimIndex), 0, kMaxPracticeDamageValue));
+         graph.setDangerDamage (victimIndex, victimIndex, victimIndex, clamp (graph.getDangerDamage (victimTeam, victimIndex, victimIndex), 0, kMaxPracticeDamageValue));
       }
    }
    float updateDamage = util.isFakeClient (attacker) ? 10.0f : 7.0f;
 
    // store away the damage done
-   int damageValue = cr::clamp (graph.getDangerDamage (m_team, victimIndex, attackerIndex) + static_cast <int> (damage / updateDamage), 0, kMaxPracticeDamageValue);
+   int damageValue = clamp (graph.getDangerDamage (m_team, victimIndex, attackerIndex) + static_cast <int> (damage / updateDamage), 0, kMaxPracticeDamageValue);
 
    if (damageValue > graph.getHighestDamageForTeam (m_team)) {
       graph.setHighestDamageForTeam (m_team, damageValue);
@@ -5447,7 +5447,7 @@ void Bot::startDoubleJump (edict_t *ent) {
    m_doubleJumpEntity = ent;
 
    startTask (Task::DoubleJump, TaskPri::DoubleJump, kInvalidNodeIndex, game.time (), true);
-   sendToChat (strings.format ("Ok %s, i will help you!", ent->v.netname.chars ()), true);
+   sendToChat (strings.format ("Ok %s, i will help you!", STRING(ent->v.netname)), true);
 }
 
 void Bot::sendBotToOrigin (const Vector &origin) {
@@ -5479,7 +5479,7 @@ void Bot::debugMsgInternal (const char *str) {
       return;
    }
    String printBuf;
-   printBuf.assignf ("%s: %s", pev->netname.chars (), str);
+   printBuf.assignf ("%s: %s", STRING(pev->netname), str);
 
    bool playMessage = false;
 
@@ -5508,7 +5508,7 @@ Vector Bot::calcToss (const Vector &start, const Vector &stop) {
    Vector end = stop - pev->velocity;
    end.z -= 15.0f;
 
-   if (cr::abs (end.z - start.z) > 500.0f) {
+   if (abs (end.z - start.z) > 500.0f) {
       return nullptr;
    }
    Vector midPoint = start + (end - start) * 0.5f;
@@ -5522,8 +5522,8 @@ Vector Bot::calcToss (const Vector &start, const Vector &stop) {
    if (midPoint.z < start.z || midPoint.z < end.z) {
       return nullptr;
    }
-   float timeOne = cr::sqrtf ((midPoint.z - start.z) / (0.5f * gravity));
-   float timeTwo = cr::sqrtf ((midPoint.z - end.z) / (0.5f * gravity));
+   float timeOne = sqrtf ((midPoint.z - start.z) / (0.5f * gravity));
+   float timeTwo = sqrtf ((midPoint.z - end.z) / (0.5f * gravity));
 
    if (timeOne < 0.1f) {
       return nullptr;
@@ -5541,8 +5541,8 @@ Vector Bot::calcToss (const Vector &start, const Vector &stop) {
    }
    game.testHull (end, apex, TraceIgnore::Monsters, head_hull, ent (), &tr);
 
-   if (!cr::fequal (tr.flFraction, 1.0f)) {
-      float dot = -(tr.vecPlaneNormal | (apex - end).normalize ());
+   if (!fequal (tr.flFraction, 1.0f)) {
+      float dot = -DotProduct(tr.vecPlaneNormal, (apex - end).normalize ());
 
       if (dot > 0.7f || tr.flFraction < 0.8f) {
          return nullptr;
@@ -5559,7 +5559,7 @@ Vector Bot::calcThrow (const Vector &start, const Vector &stop) {
    TraceResult tr {};
 
    float gravity = sv_gravity.float_ () * 0.55f;
-   float time = velocity.length () / 195.0f;
+   float time = velocity.Length () / 195.0f;
 
    if (time < 0.01f) {
       return nullptr;
@@ -5577,13 +5577,13 @@ Vector Bot::calcThrow (const Vector &start, const Vector &stop) {
 
    game.testHull (start, apex, TraceIgnore::None, head_hull, ent (), &tr);
 
-   if (!cr::fequal (tr.flFraction, 1.0f)) {
+   if (!fequal (tr.flFraction, 1.0f)) {
       return nullptr;
    }
    game.testHull (stop, apex, TraceIgnore::Monsters, head_hull, ent (), &tr);
 
-   if (!cr::fequal (tr.flFraction, 1.0) || tr.fAllSolid) {
-      float dot = -(tr.vecPlaneNormal | (apex - stop).normalize ());
+   if (!fequal (tr.flFraction, 1.0) || tr.fAllSolid) {
+      float dot = -DotProduct(tr.vecPlaneNormal, (apex - stop).normalize ());
 
       if (dot > 0.7f || tr.flFraction < 0.8f) {
          return nullptr;
@@ -5600,7 +5600,7 @@ edict_t *Bot::correctGrenadeVelocity (const char *model) {
          result = ent;
 
          // set the correct velocity for the grenade
-         if (m_grenade.lengthSq () > 100.0f) {
+         if (m_grenade.LengthSquared () > 100.0f) {
             ent->v.velocity = m_grenade;
          }
          m_grenadeCheckTime = game.time () + kGrenadeCheckTime;
@@ -6008,10 +6008,10 @@ void Bot::calculateFrustum () {
    auto setPlane = [&] (FrustumSide side, const Vector &v1, const Vector &v2, const Vector &v3) {
       auto &plane = m_frustum[side];
 
-      plane.normal = ((v2 - v1) ^ (v3 - v1)).normalize ();
+      plane.normal = CrossProduct(v2 - v1, v3 - v1).normalize ();
       plane.point = v2;
 
-      plane.result = -(plane.normal | plane.point);
+      plane.result = -DotProduct(plane.normal, plane.point);
    };
 
    setPlane (FrustumSide::Top, ftl, ntl, ntr);

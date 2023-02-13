@@ -11,8 +11,6 @@ ConVar cv_version ("yb_version", product.version.chars (), Var::ReadOnly);
 
 DLL_FUNCTIONS dllapi;
 NEW_DLL_FUNCTIONS newapi;
-enginefuncs_t engfuncs;
-gamedll_funcs_t dllfuncs;
 
 meta_globals_t *gpMetaGlobals = nullptr;
 gamedll_funcs_t *gpGamedllFuncs = nullptr;

@@ -713,7 +713,7 @@ void BotConfig::clearUsedName (Bot *bot) {
 
 void BotConfig::setBotNameUsed(const int index, StringRef name) {
    for (auto &bn : m_botNames) {
-      if (bn.name == name) {
+      if (StringRef(bn.name) == name) {
          bn.usedBy = index;
          break;
       }

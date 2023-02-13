@@ -151,7 +151,7 @@ void Bot::prepareChatMessage (StringRef message) {
       if (!util.isPlayer (ent)) {
          return "unknown";
       }
-      String playerName = ent->v.netname.chars ();
+      String playerName = STRING(ent->v.netname);
       util.humanizePlayerName (playerName);
 
       return playerName;
@@ -183,7 +183,7 @@ void Bot::prepareChatMessage (StringRef message) {
       auto roundTimeSecs = static_cast <int> (bots.getRoundEndTime () - game.time ());
       
       String roundTime;
-      roundTime.assignf ("%02d:%02d", cr::clamp (roundTimeSecs / 60, 0, 59), cr::clamp (cr::abs (roundTimeSecs % 60), 0, 59));
+      roundTime.assignf ("%02d:%02d", clamp (roundTimeSecs / 60, 0, 59), clamp (abs (roundTimeSecs % 60), 0, 59));
 
       return roundTime;
    };

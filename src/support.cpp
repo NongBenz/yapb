@@ -115,7 +115,7 @@ bool BotSupport::isVisible (const Vector &origin, edict_t *ent) {
    TraceResult tr {};
    game.testLine (ent->v.origin + ent->v.view_ofs, origin, TraceIgnore::Everything, ent, &tr);
 
-   if (!cr::fequal (tr.flFraction, 1.0f)) {
+   if (!fequal (tr.flFraction, 1.0f)) {
       return false;
    }
    return true;
@@ -133,7 +133,7 @@ void BotSupport::traceDecals (entvars_t *pev, TraceResult *trace, int logotypeIn
       decalIndex = engfuncs.pfnDecalIndex ("{lambda06");
    }
 
-   if (cr::fequal (trace->flFraction, 1.0f)) {
+   if (fequal (trace->flFraction, 1.0f)) {
       return;
    }
    if (!game.isNullEntity (trace->pHit)) {
@@ -200,7 +200,7 @@ bool BotSupport::isPlayer (edict_t *ent) {
    }
 
    if ((ent->v.flags & (FL_CLIENT | FL_FAKECLIENT)) || bots[ent] != nullptr) {
-      return !strings.isEmpty (ent->v.netname.chars ());
+      return !strings.isEmpty (STRING(ent->v.netname));
    }
    return false;
 }
@@ -214,7 +214,7 @@ bool BotSupport::isMonster (edict_t *ent) {
       return false;
    }
 
-   if (strncmp ("hostage", ent->v.classname.chars (), 7) == 0) {
+   if (strncmp ("hostage", STRING(ent->v.classname), 7) == 0) {
       return false;
    }
 
@@ -222,7 +222,7 @@ bool BotSupport::isMonster (edict_t *ent) {
 }
 
 bool BotSupport::isItem (edict_t *ent) {
-   return !!(strstr (ent->v.classname.chars(), "item_"));
+   return !!(strstr (STRING(ent->v.classname), "item_"));
 }
 
 bool BotSupport::isPlayerVIP (edict_t *ent) {
@@ -496,7 +496,7 @@ void BotSupport::simulateNoise (int playerIndex) {
 
    // uses ladder?
    else if (client.ent->v.movetype == MOVETYPE_FLY) {
-      if (cr::abs (client.ent->v.velocity.z) > 50.0f) {
+      if (abs (client.ent->v.velocity.z) > 50.0f) {
          noise.dist = 1024.0f;
          noise.last = game.time () + 0.3f;
       }
@@ -504,7 +504,7 @@ void BotSupport::simulateNoise (int playerIndex) {
    else {
       if (mp_footsteps.bool_ ()) {
          // moves fast enough?
-         noise.dist = 1280.0f * (client.ent->v.velocity.length2d () / 260.0f);
+         noise.dist = 1280.0f * (client.ent->v.velocity.Length2D () / 260.0f);
          noise.last = game.time () + 0.3f;
       }
    }
@@ -522,7 +522,7 @@ void BotSupport::simulateNoise (int playerIndex) {
          client.noise.pos = client.ent->v.origin;
       }
    }
-   else if (!cr::fzero (noise.last)) {
+   else if (!fzero (noise.last)) {
       // just remember it
       client.noise.dist = noise.dist;
       client.noise.last = noise.last;
@@ -677,7 +677,7 @@ void BotSupport::installSendTo () {
 
 bool BotSupport::isObjectInsidePlane (FrustumPlane &plane, const Vector &center, float height, float radius) {
    auto isPointInsidePlane = [&](const Vector &point) -> bool {
-      return plane.result + (plane.normal | point) >= 0.0f;
+      return plane.result + DotProduct(plane.normal, point) >= 0.0f;
    };
 
    const Vector &test = plane.normal.get2d ();
@@ -688,7 +688,7 @@ bool BotSupport::isObjectInsidePlane (FrustumPlane &plane, const Vector &center,
 }
 
 bool BotSupport::isModel (const edict_t *ent, StringRef model) {
-   return model.startsWith (ent->v.model.chars (9));
+   return model.startsWith (STRING(ent->v.model + 9));
 }
 
 String BotSupport::getCurrentDateTime () {

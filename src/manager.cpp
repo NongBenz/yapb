@@ -367,7 +367,7 @@ void BotManager::maintainQuota () {
    if (m_quotaMaintainTime > game.time ()) {
       return;
    }
-   cv_quota.set (cr::clamp <int> (cv_quota.int_ (), 0, game.maxClients ()));
+   cv_quota.set (clamp <int> (cv_quota.int_ (), 0, game.maxClients ()));
 
    int totalHumansInGame = getHumansCount ();
    int humanPlayersInGame = getHumansCount (true);
@@ -454,7 +454,7 @@ void BotManager::maintainAutoKill () {
    }
 
    // check if we're reached the delay, so kill out bots
-   if (!cr::fzero (m_autoKillCheckTime) && m_autoKillCheckTime < game.time ()) {
+   if (!fzero (m_autoKillCheckTime) && m_autoKillCheckTime < game.time ()) {
       killAllBots ();
       m_autoKillCheckTime = 0.0f;
 
@@ -487,7 +487,7 @@ void BotManager::maintainAutoKill () {
    int aliveHumans = getAliveHumansCount ();
 
    // check if we're have no alive players and some alive bots, and start autokill timer
-   if (!aliveHumans && aliveBots > 0 && cr::fzero (m_autoKillCheckTime)) {
+   if (!aliveHumans && aliveBots > 0 && fzero (m_autoKillCheckTime)) {
       m_autoKillCheckTime = game.time () + killDelay;
    }
 }
@@ -537,7 +537,7 @@ void BotManager::resetFilters () {
 
 void BotManager::decrementQuota (int by) {
    if (by != 0) {
-      cv_quota.set (cr::clamp <int> (cv_quota.int_ () - by, 0, cv_quota.int_ ()));
+      cv_quota.set (clamp <int> (cv_quota.int_ () - by, 0, cv_quota.int_ ()));
       return;
    }
    cv_quota.set (0);
@@ -769,7 +769,7 @@ void BotManager::listBots () {
    ctrl.msg ("%-3.5s\t%-19.16s\t%-10.12s\t%-3.4s\t%-3.4s\t%-3.4s\t%-3.5s", "index", "name", "personality", "team", "difficulty", "frags", "alive");
 
    for (const auto &bot : bots) {;
-      ctrl.msg ("[%-3.1d]\t%-19.16s\t%-10.12s\t%-3.4s\t%-3.1d\t%-3.1d\t%-3.4s", bot->index (), bot->pev->netname.chars (), bot->m_personality == Personality::Rusher ? "rusher" : bot->m_personality == Personality::Normal ? "normal" : "careful", bot->m_team == Team::CT ? "CT" : "T", bot->m_difficulty, static_cast <int> (bot->pev->frags), bot->m_notKilled ? "yes" : "no");
+      ctrl.msg ("[%-3.1d]\t%-19.16s\t%-10.12s\t%-3.4s\t%-3.1d\t%-3.1d\t%-3.4s", bot->index (), STRING(bot->pev->netname), bot->m_personality == Personality::Rusher ? "rusher" : bot->m_personality == Personality::Normal ? "normal" : "careful", bot->m_team == Team::CT ? "CT" : "T", bot->m_difficulty, static_cast <int> (bot->pev->frags), bot->m_notKilled ? "yes" : "no");
    }
    ctrl.msg ("%d bots", m_bots.length ());
 }
@@ -778,7 +778,7 @@ float BotManager::getConnectTime (StringRef name, float original) {
    // this function get's fake bot player time.
 
    for (const auto &bot : m_bots) {
-      if (name.startsWith (bot->pev->netname.chars ())) {
+      if (name.startsWith (STRING(bot->pev->netname))) {
          return bot->getConnectionTime ();
       }
    }
@@ -905,7 +905,7 @@ void BotManager::balanceBotDifficulties () {
    }
    // difficulty chaning once per round (time)
    auto updateDifficulty = [] (Bot *bot, int32 offset) {
-      bot->m_difficulty = cr::clamp (static_cast <Difficulty> (bot->m_difficulty + offset), Difficulty::Noob, Difficulty::Expert);
+      bot->m_difficulty = clamp (static_cast <Difficulty> (bot->m_difficulty + offset), Difficulty::Noob, Difficulty::Expert);
    };
 
    auto ratioPlayer = getAverageTeamKPD (false);
@@ -967,11 +967,11 @@ Bot::Bot (edict_t *bot, int difficulty, int personality, int team, int skin) {
    }
 
    char reject[256] = {0, };
-   MDLL_ClientConnect (bot, bot->v.netname.chars (), strings.format ("127.0.0.%d", clientIndex + 100), reject);
+   MDLL_ClientConnect (bot, STRING(bot->v.netname), strings.format ("127.0.0.%d", clientIndex + 100), reject);
 
    if (!strings.isEmpty (reject)) {
-      logger.error ("Server refused '%s' connection (%s)", bot->v.netname.chars (), reject);
-      game.serverCommand ("kick \"%s\"", bot->v.netname.chars ()); // kick the bot player if the server refused it
+      logger.error ("Server refused '%s' connection (%s)", STRING(bot->v.netname), reject);
+      game.serverCommand ("kick \"%s\"", STRING(bot->v.netname)); // kick the bot player if the server refused it
 
       bot->v.flags |= FL_KILLME;
       return;
@@ -996,7 +996,7 @@ Bot::Bot (edict_t *bot, int difficulty, int personality, int team, int skin) {
 
    m_notKilled = false;
    m_weaponBurstMode = BurstMode::Off;
-   m_difficulty = cr::clamp (static_cast <Difficulty> (difficulty), Difficulty::Noob, Difficulty::Expert);
+   m_difficulty = clamp (static_cast <Difficulty> (difficulty), Difficulty::Noob, Difficulty::Expert);
 
    auto minDifficulty = cv_difficulty_min.int_ ();
    auto maxDifficulty = cv_difficulty_max.int_ ();
@@ -1136,7 +1136,7 @@ void BotManager::erase (Bot *bot) {
       }
 
       if (cv_save_bots_names.bool_ ()) {
-         m_saveBotNames.emplaceLast (bot->pev->netname.chars ());
+         m_saveBotNames.emplaceLast (STRING(bot->pev->netname));
       }
       bot->markStale ();
 
@@ -1425,7 +1425,7 @@ void Bot::newRound () {
    if (rg.chance (50)) {
       pushChatterMessage (Chatter::NewRound);
    }
-   m_updateInterval = game.is (GameFlags::Legacy | GameFlags::Xash3D) ? 0.0f : (1.0f / cr::clamp (cv_think_fps.float_ (), 30.0f, 60.0f));
+   m_updateInterval = game.is (GameFlags::Legacy | GameFlags::Xash3D) ? 0.0f : (1.0f / clamp (cv_think_fps.float_ (), 30.0f, 60.0f));
 }
 
 void Bot::resetPathSearchType () {
@@ -1456,7 +1456,7 @@ void Bot::kill () {
 
 void Bot::kick () {
    // this function kick off one bot from the server.
-   auto username = pev->netname.chars ();
+   auto username = STRING(pev->netname);
  
    if (!(pev->flags & FL_CLIENT) || strings.isEmpty (username)) {
       return;
@@ -1559,7 +1559,7 @@ void Bot::updateTeamJoin () {
       else if (m_wantedTeam == 2 || m_team == Team::CT) {
          enforcedSkin = cv_botskin_ct.int_ ();
       }
-      enforcedSkin = cr::clamp (enforcedSkin, 0, maxChoice);
+      enforcedSkin = clamp (enforcedSkin, 0, maxChoice);
 
       // try to choice manually
       if (m_wantedSkin < 1 || m_wantedSkin > maxChoice) {
@@ -1689,7 +1689,7 @@ void BotManager::updateIntrestingEntities () {
 
    // search the map for any type of grenade
    game.searchEntities (nullptr, kInfiniteDistance, [&] (edict_t *e) {
-      auto classname = e->v.classname.chars ();
+      auto classname = STRING(e->v.classname);
       
       // search for grenades, weaponboxes, weapons, items and armoury entities
       if (strncmp ("weaponbox", classname, 9) == 0 || strncmp ("grenade", classname, 7) == 0 || util.isItem (e) || strncmp ("armoury", classname, 7) == 0) {
